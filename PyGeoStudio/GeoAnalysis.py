@@ -110,10 +110,18 @@ class GeoStudioAnalysis:
     return saved_time,np.array(datas).transpose()
   
   def defineContext(self, x):
+    """
+    Context define the material distribution and the BC
+    It is a GeoContext instance
+    """
     self.context = x
     return
   
   def defineGeometry(self,x):
+    """
+    Define the geometry associated with the analysis
+    This is a list of 
+    """
     self.geometry = x
     return
   

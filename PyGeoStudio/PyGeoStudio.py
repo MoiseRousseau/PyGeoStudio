@@ -7,6 +7,7 @@ import xml.etree.ElementTree as ET
 from PyGeoStudio.GeoAnalysis import GeoStudioAnalysis 
 from PyGeoStudio.GeoGeometry import GeoStudioGeometry 
 from PyGeoStudio.GeoContext import GeoStudioContext
+from PyGeoStudio.GeoMaterial import GeoStudioMaterial
 
 class GeoStudioFile:
   def __init__(self, geostudio_file, mode='r'):
@@ -16,8 +17,10 @@ class GeoStudioFile:
     self.geometries = []
     self.analysises = []
     self.contexts = []
+    self.materials = []
     self.f_meshes = []
     self.meshes = []
+    self.unsupported_items = []
     self.initialize()
     return
     
@@ -78,12 +81,18 @@ class GeoStudioFile:
       #print(element.tag)
       if element.tag == "FileInfo":
         self.f_src_info = element.attrib
-      if element.tag == "Geometries":
+      elif element.tag == "Geometries":
         self.__readGeometry__(element)
-      if element.tag == "Analyses":
+      elif element.tag == "Analyses":
         self.__readAnalysis__(element)
-      if element.tag == "Contexts":
+      elif element.tag == "Contexts":
+        #context define the material properties associated with the analysis and BC
         self.__readContexts__(element)
+      elif element.tag == "Materials":
+        self.__readMaterials__(element)
+      else:
+        #store the item for the write method
+        self.unsupported_items.append(element)
     
     for mesh in self.f_meshes:
       self.meshes.append(self.src.read(mesh))
@@ -94,27 +103,8 @@ class GeoStudioFile:
     self.n_geometry = int(element.attrib["Len"])
     for i in range(self.n_geometry):
       new_geom = GeoStudioGeometry(self.src)
-      for property_ in element[i]:
-        if property_.tag == "Points":
-          new_geom.points = np.zeros((int(property_.attrib["Len"]),2),dtype='f8')
-          for point in property_:
-            new_geom.points[int(point.attrib["ID"])-1] = [float(point.attrib["X"]), float(point.attrib["Y"])]
-        elif property_.tag == "Lines":
-          new_geom.lines = np.zeros((int(property_.attrib["Len"]),2),dtype='i8')-1
-          for line in property_:
-            new_geom.lines[int(line[0].text)-1] = [int(line[1].text)-1,int(line[2].text)-1]
-        elif property_.tag == "Regions":
-          new_geom.regions = np.zeros((int(property_.attrib["Len"]),99),dtype='i8')-1
-          for region in property_:
-            id_ = int(region[0].text)-1
-            pts = [int(x)-1 for x in region[1].text.split(',')]
-            pts += [-1 for x in range(99-len(pts))]
-            new_geom.regions[int(region[0].text)-1] = pts
-        elif property_.tag == "MeshId":
-          self.f_meshes.append("mesh_"+property_.text+".ply")
-          setattr(new_geom, property_.tag, property_.text)
-        else:
-          setattr(new_geom, property_.tag, property_.text)
+      new_geom.read(element[i])
+      self.f_meshes.append("mesh_"+new_geom.mesh_id+".ply")
       self.geometries.append(new_geom)
     return
   
@@ -135,17 +125,18 @@ class GeoStudioFile:
     self.n_contexts = int(element.attrib["Len"])
     for i in range(self.n_contexts):
       new_context = GeoStudioContext(self.src)
-      for property_ in element[i]:
-        if property_.tag == "GeometryUsesMaterials":
-          new_context.material_distribution = np.zeros((int(property_.attrib["Len"]),2), dtype='i8')-1
-          for i,mat in enumerate(property_):
-            reg = int(mat.attrib["ID"].split('-')[-1])
-            mat_id = int(mat.attrib["Entry"])
-            new_context.material_distribution[i] = [reg,mat_id]
-        if property_.tag == "AnalysisID":
-          new_context.analysisID = int(property_.text)
+      new_context.read(element[i])
       self.contexts.append(new_context)
     return
+  
+  def __readMaterials__(self, element):
+    self.n_materials = int(element.attrib["Len"])
+    for i in range(self.n_materials):
+      mat_ = element[i]
+      new_mat = GeoStudioMaterial(self.src)
+      new_mat.read(mat_)
+      self.materials.append(new_mat)
+      
   
   def getGeometry(self, id_):
     return self.geometries[id_-1]
@@ -173,3 +164,25 @@ class GeoStudioFile:
   
   def getAllAnalysis(self):
     return self.analysises
+  
+  def getMaterialByName(self, name):
+    for mat in self.materials:
+      if mat.name == name:
+        return mat
+    print(f"Material {name} not found in file.")
+    raise ValueError
+  
+  def getMaterials(self):
+    return self.materials
+  
+  def getMaterialByID(self, id):
+    for mat in self.materials:
+      if mat.id == id:
+        return mat
+    print(f"Material ID {name} not found in file.")
+    raise ValueError
+  
+  def writeAnalysis(self, out):
+    
+    return
+  
