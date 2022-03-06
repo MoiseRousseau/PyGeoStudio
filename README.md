@@ -9,13 +9,14 @@ But, why do you need an external software such as Python to read your file while
 4. Modify analysis without using the graphical interface
 5. Program analysis (e.g. the same analysis but with different parameters)
 6. Perform automatic calibration / optimisation
-7. The idea you have in might which is not included in the 6 before
+7. The idea you have in mind which is not included in the 6 before
 
 ## Features
 
 Below is the implemented (and tested) features:
 
-* Read (and write in the futur) GeoStudio file containing
+* Read (and write in the futur) GeoStudio file
+* Change analysis properties (geometry, materials, ...)
 * Draw the conceptual model created in GeoStudio
 * Read analysis results and extract temporal and spatial data
 * Plot analysis results at given coordinates
@@ -24,7 +25,7 @@ Below is the implemented (and tested) features:
 
 `PyGeoStudio` library will be further installable through the `pip` command.
 For instance, just download the repository and copy the `PyGeoStudio` folder where you create your Python script (which could be the folder containing your GeoStudio file, or not)
-You will need to install the following Python library: `matplotlib`, `numpy`
+You will need to install the following Python library: `matplotlib`, `numpy`.
 
 ## Examples
 

@@ -3,6 +3,8 @@ import zipfile
 import os
 import numpy as np
 import xml.etree.ElementTree as ET
+import sys
+import datetime
 
 from PyGeoStudio.GeoAnalysis import GeoStudioAnalysis 
 from PyGeoStudio.GeoGeometry import GeoStudioGeometry 
@@ -20,30 +22,8 @@ class GeoStudioFile:
     self.materials = []
     self.f_meshes = []
     self.meshes = []
-    self.unsupported_items = []
+    self.xml_items = []
     self.initialize()
-    return
-    
-  def showAnalysisTree_old(self):
-    #get folder
-    file_list = self.src.namelist()
-    folders = list(set(x.split('/')[0] for x in file_list if len(x.split('/'))>1))
-    folders.sort()
-    #print it
-    print(f"GeoStudio file: {self.f_src}")
-    i = 0
-    while i<len(folders):
-      x = folders[i]
-      print(f"  | {x}")
-      if 0: #(i != len(folders)-1) and (x in folders[i+1]):
-        i += 1
-        subfolder = folders[i]
-        while x in subfolder:
-          print(f"    | {subfolder}")
-          i += 1
-          subfolder = folders[i]
-      else:
-        i += 1
     return
   
   def showAnalysisTree(self, detail_level=0):
@@ -53,19 +33,21 @@ class GeoStudioFile:
       print(analysis.ID, analysis.Name)
     return
   
-  def getMeshVertices(self):
+  def getMeshes(self):
     """
-    Return a numpy array of the mesh vertices
+    Return the available meshes in the GeoStudio root folder
     """
-    print("how to choose the right mesh?")
-    return
-    data = self.src_mesh.elements[1].data
-    return np.array((data['x'], data['y'], data['z'])).transpose()
+    filelist = [x.filename for x in self.src.filelist]
+    return [x for x in filelist if ((".ply" in x) and ("/" not in x))]
   
-  def getMeshElement(self):
-    #TODO
-    print("Moise: I still need to understand how mesh connectivity is stored")
-    return None
+  def extractMesh(self, name):
+    filelist = [x.filename for x in self.src.filelist]
+    if name not in filelist:
+      print(f"No mesh nammed {name} found. Available meshes:")
+      self.printMeshes()
+    self.src.extract(name)
+    return
+    
   
   def initialize(self):
     #open file
@@ -81,18 +63,23 @@ class GeoStudioFile:
       #print(element.tag)
       if element.tag == "FileInfo":
         self.f_src_info = element.attrib
+        self.xml_items.append("FileInfo")
       elif element.tag == "Geometries":
         self.__readGeometry__(element)
+        self.xml_items.append("Geometries")
       elif element.tag == "Analyses":
         self.__readAnalysis__(element)
+        self.xml_items.append("Analyses")
       elif element.tag == "Contexts":
         #context define the material properties associated with the analysis and BC
         self.__readContexts__(element)
+        self.xml_items.append("Contexts")
       elif element.tag == "Materials":
         self.__readMaterials__(element)
+        self.xml_items.append("Materials")
       else:
         #store the item for the write method
-        self.unsupported_items.append(element)
+        self.xml_items.append(element)
     
     for mesh in self.f_meshes:
       self.meshes.append(self.src.read(mesh))
@@ -102,7 +89,7 @@ class GeoStudioFile:
   def __readGeometry__(self,element):
     self.n_geometry = int(element.attrib["Len"])
     for i in range(self.n_geometry):
-      new_geom = GeoStudioGeometry(self.src)
+      new_geom = GeoStudioGeometry()
       new_geom.read(element[i])
       self.f_meshes.append("mesh_"+new_geom.mesh_id+".ply")
       self.geometries.append(new_geom)
@@ -113,18 +100,14 @@ class GeoStudioFile:
     for i in range(self.n_analysis):
       new_analysis = GeoStudioAnalysis(self.src)
       new_analysis.Index_in_xml = i
-      for property_ in element[i]:
-        try:
-          setattr(new_analysis, property_.tag, property_.text)
-        except:
-          print(property_.tag)
+      new_analysis.read(element[i])
       self.analysises.append(new_analysis)
     return
   
   def __readContexts__(self, element):
     self.n_contexts = int(element.attrib["Len"])
     for i in range(self.n_contexts):
-      new_context = GeoStudioContext(self.src)
+      new_context = GeoStudioContext()
       new_context.read(element[i])
       self.contexts.append(new_context)
     return
@@ -182,7 +165,63 @@ class GeoStudioFile:
     print(f"Material ID {name} not found in file.")
     raise ValueError
   
-  def writeAnalysis(self, out):
-    
+  def writeConfigurationFile(self, f_out, prettify=True):
+    #build new ET
+    src_root = self.main_xml.getroot()
+    out_root = ET.Element(src_root.tag)
+    out_root.attrib = src_root.attrib
+    for element in self.xml_items:
+      if element == "FileInfo":
+        sub = ET.SubElement(out_root, "FileInfo")
+        sub.attrib = self.f_src_info.copy()
+        sub.attrib["LastAuthor"] = "Modified by PyGeoStudio"
+        sub.attrib["RevNumber"] = str(int(sub.attrib["RevNumber"])+1)
+        x = datetime.datetime.now()
+        sub.attrib["Date"] = x.strftime('%m') + '/' + x.strftime('%d') + '/' + x.strftime('%G')
+        sub.attrib["Time"] = x.strftime("%X")
+      elif element == "Geometries":
+        sub = ET.SubElement(out_root, "Geometries")
+        sub.attrib = {"Len":str(len(self.geometries))}
+        for geom in self.geometries:
+          sub_geom = ET.SubElement(sub, "Geometry")
+          geom.write(sub_geom)
+      elif element == "Analyses":
+        sub = ET.SubElement(out_root, "Analyses")
+        sub.attrib = {"Len":str(len(self.analysises))}
+        for analysis in self.analysises:
+          sub_analysis = ET.SubElement(sub, "Analysis")
+          analysis.write(sub_analysis)
+      elif element == "Contexts":
+        sub = ET.SubElement(out_root, "Contexts")
+        sub.attrib = {"Len":str(len(self.contexts))}
+        for context in self.contexts:
+          sub_context = ET.SubElement(sub, "Context")
+          context.write(sub_context)
+      elif element == "Materials":
+        sub = ET.SubElement(out_root, "Materials")
+        sub.attrib = {"Len":str(len(self.materials))}
+        for mat in self.materials:
+          sub_mat = ET.SubElement(sub, "Material")
+          mat.write(sub_mat)
+      else:
+        #store the item for the write method
+        out_root.append(element)
+    tree = ET.ElementTree(out_root)
+    tree.write(f_out, encoding='utf-8', xml_declaration=True, method="xml") 
+    if prettify:
+      self.__prettifyer__(f_out)
+    return
+  
+  def writeGeoStudioFile(self, f_out):
+    pass
+  
+  def __prettifyer__(self, f_out):
+    from bs4 import BeautifulSoup
+    with open(f_out, 'r') as src:
+      data = '\n'.join(src.readlines())
+    bs = BeautifulSoup(data, 'xml')
+    data = bs.prettify()
+    with open(f_out, 'w') as out:
+      out.write(data)
     return
   

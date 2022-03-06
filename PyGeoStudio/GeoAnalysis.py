@@ -17,11 +17,51 @@ class GeoStudioAnalysis:
     self.Method = None
     self.GeometryId = None
     self.ToSolve = None
+    self.other_elem = []
     
     self.n_timestep = None
     self.timesteps = None
     self.saved_timesteps = None
     self.initialized = False
+    return
+  
+  def read(self, element):
+    for property_ in element:
+      if property_.tag == "ID":
+        self.ID = int(property_.text)
+      elif property_.tag == "Name":
+        self.Name = property_.text
+      elif property_.tag == "Kind":
+        self.Kind = property_.text
+      elif property_.tag == "ParentID":
+        self.ParentID = property_.text
+      elif property_.tag == "Method":
+        self.Method = property_.text
+      elif property_.tag == "GeometryId":
+        self.GeometryId = property_.text
+      elif property_.tag == "ToSolve":
+        self.ToSolve = property_.text
+      else:
+        self.other_elem.append(property_)
+    return
+  
+  def write(self, et):
+    sub = ET.SubElement(et, "ID")
+    sub.text = str(self.ID)
+    sub = ET.SubElement(et, "Name")
+    sub.text = self.Name
+    sub = ET.SubElement(et, "Kind")
+    sub.text = self.Kind
+    sub = ET.SubElement(et, "ParentID")
+    sub.text = self.ParentID
+    sub = ET.SubElement(et, "Method")
+    sub.text = self.Method
+    sub = ET.SubElement(et, "GeometryId")
+    sub.text = self.GeometryId
+    sub = ET.SubElement(et, "ToSolve")
+    sub.text = self.ToSolve
+    for prop in self.other_elem:
+      et.append(prop)
     return
   
   def getMeshBoundingBox(self):
@@ -127,11 +167,11 @@ class GeoStudioAnalysis:
   
   def showProblem(self):
     fig,ax = self.geometry.drawGeometry()
-    cmap = plt.get_cmap('tab20', np.max(self.context.material_distribution[:,1]))
-    for reg, mat_id in self.context.material_distribution:
-      pts = [x for x in self.geometry.regions[reg-1] if x!=-1]
-      X_pts = [self.geometry.points[x,0] for x in pts]
-      Y_pts = [self.geometry.points[x,1] for x in pts]
+    cmap = plt.get_cmap('tab20', np.max(list(self.context.material_distribution.values())))
+    for reg, mat_id in self.context.material_distribution.items():
+      pts = self.geometry.regions[reg][0]
+      X_pts = [self.geometry.points[x-1,0] for x in pts]
+      Y_pts = [self.geometry.points[x-1,1] for x in pts]
       ax.fill(X_pts, Y_pts,color=cmap(mat_id-1))
     plt.show()
     return
@@ -185,4 +225,4 @@ class GeoStudioAnalysis:
     self.mesh = plyfile.PlyData.read(self.geofile.open(self.f_mesh))
     self.vertices = self.mesh.elements[1].data
     self.n_vertices = len(self.vertices)
-    return  
+    return
