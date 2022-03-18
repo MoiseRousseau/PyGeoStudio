@@ -57,7 +57,8 @@ class GeoStudioFile:
       print(f"File {self.f_src} doesn't exist in the current directory")
       raise ValueError
     #parse geoslope input
-    self.main_xml = ET.parse(self.src.open(self.f_src[:-3]+'xml'))
+    prefix = self.f_src.split('/')[-1][:-4]
+    self.main_xml = ET.parse(self.src.open(prefix+'.xml'))
     root = self.main_xml.getroot()
     for element in root:
       #print(element.tag)
@@ -81,8 +82,8 @@ class GeoStudioFile:
         #store the item for the write method
         self.xml_items.append(element)
     
-    for mesh in self.f_meshes:
-      self.meshes.append(self.src.read(mesh))
+    #for mesh in self.f_meshes:
+      #self.meshes.append(self.src.read(mesh))
     
     return
     
@@ -177,7 +178,7 @@ class GeoStudioFile:
         sub.attrib["LastAuthor"] = "Modified by PyGeoStudio"
         sub.attrib["RevNumber"] = str(int(sub.attrib["RevNumber"])+1)
         x = datetime.datetime.now()
-        sub.attrib["Date"] = x.strftime('%m') + '/' + x.strftime('%d') + '/' + x.strftime('%G')
+        sub.attrib["Date"] = x.strftime('%m') + '-' + x.strftime('%d') + '-' + x.strftime('%G')
         sub.attrib["Time"] = x.strftime("%X")
       elif element == "Geometries":
         sub = ET.SubElement(out_root, "Geometries")
@@ -213,6 +214,14 @@ class GeoStudioFile:
     return
   
   def writeGeoStudioFile(self, f_out):
+    ext = f_out.split('.')[-1]
+    if ext != "gsz":
+      f_out += ".gsz"
+    prefix = f_out.split('/')[-1][:-4]
+    zip_out = zipfile.ZipFile(f_out, "w")
+    with zip_out.open(prefix + ".xml", "w") as xml_out:
+      self.writeConfigurationFile(xml_out, prettify=False)
+    zip_out.close()
     pass
   
   def __prettifyer__(self, f_out):
@@ -224,4 +233,30 @@ class GeoStudioFile:
     with open(f_out, 'w') as out:
       out.write(data)
     return
+  
+  def __eq__(self, other):
+    """
+    For test purpose
+    """
+    same = True
+    if not self.geometries == other.geometries: 
+      same = False
+      print("geometries not the same")
+    if not self.analysises == other.analysises: 
+      same = False
+      print("analysis not the same")
+    if not self.contexts == other.contexts:
+      same = False
+      print("contexts not the same")
+    if not self.materials == other.materials:
+      same = False
+      print("materials not the same")
+    if not self.f_meshes == other.f_meshes:
+      same = False
+      print("f_meshes not the same")
+    if not self.meshes == other.meshes:
+      same = False
+      print("meshes not the same")
+    return same
+    
   

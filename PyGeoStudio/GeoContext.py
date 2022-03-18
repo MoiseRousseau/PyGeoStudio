@@ -60,3 +60,7 @@ class GeoStudioContext:
     for prop in self.other_elem:
       et.append(prop)
     return
+  
+  def __eq__(self, other):
+    print("TODO")
+    return False

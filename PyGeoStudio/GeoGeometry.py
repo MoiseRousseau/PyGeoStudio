@@ -90,5 +90,22 @@ class GeoStudioGeometry:
     for prop in self.other_elem:
       et.append(prop)
     return
+  
+  def __eq__(self, other):
+    same = True
+    for this_,other_ in zip(self.regions.items(),other.regions.items()):
+      if this_[0] != other_[0]: same=False
+      if this_[1][1] != other_[1][1]: same = False
+      if same == False:
+        print("regions not the same")
+    if not np.all(self.points == other.points):
+      same = False
+      print("points not the same")
+      print(self.points)
+      print(other.points)
+    if not np.all(self.lines == other.lines):
+      same = False
+      print("lines not the same")
+    return same
     
 

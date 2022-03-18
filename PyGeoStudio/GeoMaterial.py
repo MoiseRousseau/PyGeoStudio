@@ -73,3 +73,7 @@ class GeoStudioMaterial:
     for x in self.other_elem:
       et.append(x)
     return
+  
+  def __eq__(self, other):
+    print("TODO")
+    return False

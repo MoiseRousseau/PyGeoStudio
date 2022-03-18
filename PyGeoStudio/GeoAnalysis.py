@@ -226,3 +226,7 @@ class GeoStudioAnalysis:
     self.vertices = self.mesh.elements[1].data
     self.n_vertices = len(self.vertices)
     return
+  
+  def __eq__(self, other):
+    print("TODO")
+    return False
