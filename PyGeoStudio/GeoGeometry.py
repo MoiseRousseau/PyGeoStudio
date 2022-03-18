@@ -52,6 +52,34 @@ class GeoStudioGeometry:
         self.other_elem.append(property_)
     return
   
+  def create_region(self, pts):
+    """
+    Create new points, new lines and a region based on the point coordinates given.
+    """
+    n_pts_ini = len(self.points)
+    self.add_points(pts)
+    new_lines = [[x+n_pts_ini+1,x+n_pts_ini+2] for x in range(len(pts))]
+    new_lines[-1][1] = n_pts_ini+1
+    self.add_lines(new_lines)
+    new_region = [x+n_pts_ini+1 for x in range(len(pts))]
+    self.add_regions(new_region)
+    return
+  
+  def add_points(self, pts):
+    self.points = np.append(self.points, pts)
+    return
+    
+  def add_lines(self, lines):
+    self.lines = np.append(self.lines, new_lines)
+    return
+  
+  def add_regions(self, pt_ids):
+    new_id = len(self.regions) + 1
+    new_reg = [pt_ids, []]
+    self.regions[f"Regions-{new_id}"] = new_reg
+    return
+    
+  
   def write(self, et):
     #points
     sub = ET.SubElement(et, "Points")
