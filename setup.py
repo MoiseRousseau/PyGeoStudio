@@ -29,7 +29,8 @@ setup(
         "Programming Language :: Python :: 3.10",
     ],
     keywords='topology optimization, mechanics, numerical simulation', 
-    package_dir={'': 'PyGeoStudio'}, 
+    packages=find_packages(),
+    include_package_data=True,
     python_requires='>=3.6, <4',
     install_requires=['numpy', 'matplotlib'],
     project_urls={ 
