@@ -35,10 +35,15 @@ class GeoStudioGeometry:
           self.lines[int(line[0].text)-1] = [int(line[1].text)-1,int(line[2].text)-1]
       elif property_.tag == "Regions":
         for region in property_:
-          id_ = region[0].text
-          pts = [int(x) for x in region[1].text.split(',')]
-          mesh_attrib = region[2].attrib
-          self.regions[f"Regions-{id_}"] = [pts, mesh_attrib]
+          for x in region:
+            other_attrib = []
+            if x.tag == "ID":
+              id_ = x.text
+            if x.tag == "PointIDs":
+              pts = [int(y) for y in x.text.split(',')]
+            else:
+              other_attrib.append(x)
+          self.regions[f"Regions-{id_}"] = [pts, other_attrib]
       elif property_.tag == "MeshId":
         self.mesh_id = property_.text
       elif property_.tag == "ResultGraphs":
@@ -74,8 +79,10 @@ class GeoStudioGeometry:
       sub_sub_reg.text = id_.split('-')[-1]
       sub_sub_reg = ET.SubElement(sub_reg, "PointIDs")
       sub_sub_reg.text = ','.join([str(x) for x in region[0]])
-      sub_sub_reg = ET.SubElement(sub_reg, "Mesh")
-      sub_sub_reg.attrib = region[1]
+      for x in region[1]:
+        sub_sub_reg = ET.SubElement(sub_reg, x.tag)
+        sub_sub_reg.text = x.text
+        sub_sub_reg.attrib = x.attrib
     #mesh id
     sub = ET.SubElement(et, "MeshId")
     sub.text = self.mesh_id
