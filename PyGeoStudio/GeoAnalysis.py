@@ -228,5 +228,14 @@ class GeoStudioAnalysis:
     return
   
   def __eq__(self, other):
-    print("TODO")
-    return False
+    print(f"-----------------------\nTest analysis {self.ID}")
+    same = True
+    if self.Index_in_xml != other.Index_in_xml: same = False
+    if self.ID != other.ID: same = False
+    if self.Name != other.Name: same = False
+    if self.Kind != other.Kind: same = False
+    if self.ParentID != other.ParentID: same = False
+    if self.Method != other.Method: same = False
+    if self.GeometryId != other.GeometryId: same = False
+    if self.ToSolve != other.ToSolve: same = False
+    return same

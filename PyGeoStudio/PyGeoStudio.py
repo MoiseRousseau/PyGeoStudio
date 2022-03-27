@@ -14,6 +14,7 @@ from PyGeoStudio.GeoMaterial import GeoStudioMaterial
 class GeoStudioFile:
   def __init__(self, geostudio_file, mode='r'):
     self.f_src = geostudio_file
+    self.src = None
     self.open_mode = mode
     
     self.geometries = []
@@ -122,6 +123,10 @@ class GeoStudioFile:
       self.materials.append(new_mat)
       
   
+  def printGeometries(self):
+    print(self.geometries)
+    return
+  
   def getGeometry(self, id_):
     return self.geometries[id_-1]
   
@@ -213,16 +218,33 @@ class GeoStudioFile:
       self.__prettifyer__(f_out)
     return
   
-  def writeGeoStudioFile(self, f_out):
+  def writeGeoStudioFile(self, f_out, compresslevel=1, overwrite=False):
     ext = f_out.split('.')[-1]
     if ext != "gsz":
       f_out += ".gsz"
     prefix = f_out.split('/')[-1][:-4]
-    zip_out = zipfile.ZipFile(f_out, "w")
+    if f_out == self.f_src:
+      if not overwrite:
+        print("Warning! You are overwriting the source GeoStudio file")
+        print("Please set \"overwrite\" to True to proceed")
+        return
+      else:
+        print("TODO: write special method")
+        return
+    else:
+      zip_out = zipfile.ZipFile(f_out, mode="w", 
+                                compression=zipfile.ZIP_DEFLATED, 
+                                compresslevel=compresslevel)
     with zip_out.open(prefix + ".xml", "w") as xml_out:
       self.writeConfigurationFile(xml_out, prettify=False)
+    mesh_set = set()
+    for geom in self.geometries:
+      mesh_set.add(geom.mesh_id)
+    for mesh_id in mesh_set:
+      mesh_name = "mesh_" + mesh_id + ".ply"
+      zip_out.writestr(mesh_name, data=self.src.read(mesh_name))
     zip_out.close()
-    pass
+    return
   
   def __prettifyer__(self, f_out):
     from bs4 import BeautifulSoup

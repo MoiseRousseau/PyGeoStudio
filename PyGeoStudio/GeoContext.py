@@ -62,5 +62,9 @@ class GeoStudioContext:
     return
   
   def __eq__(self, other):
-    print("TODO")
-    return False
+    print(f"-----------------------\nTest context")
+    same = True
+    if self.material_distribution != other.material_distribution: same = False
+    if self.hydraulic_bc_distribution != other.hydraulic_bc_distribution: same = False
+    if self.analysisID != other.analysisID: same = False
+    return same

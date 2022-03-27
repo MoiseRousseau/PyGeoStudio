@@ -75,5 +75,13 @@ class GeoStudioMaterial:
     return
   
   def __eq__(self, other):
-    print("TODO")
-    return False
+    print(f"-----------------------\nTest material {self.name}")
+    same = True
+    if self.id != other.id: same = False
+    if self.color != other.color: same = False
+    if self.name != other.name: same = False
+    if self.seep_model != other.seep_model: same = False
+    if self.hydraulic_function != other.hydraulic_function: same = False
+    if self.stress_strain_model != other.stress_strain_model: same = False
+    self.other_elem = []
+    return same

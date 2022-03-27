@@ -6,16 +6,22 @@ class GeoStudioGeometry:
   def __init__(self):
     self.points = None
     self.lines = None
+    self.mesh_id = None
     self.regions = {}
     self.other_elem = []
     return
   
   def drawGeometry(self):
     fig, ax = plt.subplots()
+    #draw points
+    ax.scatter(self.points, color='k')
+    #draw lines
     for line in self.lines:
       X1, Y1 = self.points[line[0]]
       X2, Y2 = self.points[line[1]]
       ax.plot([X1,X2],[Y1,Y2], 'k')
+    #draw region
+    #TODO
     return fig,ax
   
   def showGeometry(self):
@@ -52,7 +58,10 @@ class GeoStudioGeometry:
         self.other_elem.append(property_)
     return
   
-  def create_region(self, pts):
+  def getPoints(self):
+    return self.points
+  
+  def createRegion(self, pts):
     """
     Create new points, new lines and a region based on the point coordinates given.
     """
@@ -65,15 +74,15 @@ class GeoStudioGeometry:
     self.add_regions(new_region)
     return
   
-  def add_points(self, pts):
+  def addPoints(self, pts):
     self.points = np.append(self.points, pts)
     return
     
-  def add_lines(self, lines):
+  def addLines(self, lines):
     self.lines = np.append(self.lines, new_lines)
     return
   
-  def add_regions(self, pt_ids):
+  def addRegions(self, pt_ids):
     new_id = len(self.regions) + 1
     new_reg = [pt_ids, []]
     self.regions[f"Regions-{new_id}"] = new_reg
@@ -85,7 +94,7 @@ class GeoStudioGeometry:
     sub = ET.SubElement(et, "Points")
     sub.attrib = {"Len":str(len(self.points))}
     for i,pt in enumerate(self.points):
-      sub_pt = ET.SubElement(et, "Point")
+      sub_pt = ET.SubElement(sub, "Point")
       sub_pt.attrib = {"ID":str(i+1), "X":str(pt[0]), 'Y':str(pt[1])}
     #lines
     sub = ET.SubElement(et, "Lines")
@@ -120,7 +129,9 @@ class GeoStudioGeometry:
     return
   
   def __eq__(self, other):
+    print("-----------------------\nTest Geometry")
     same = True
+    if self.mesh_id != other.mesh_id: same = False
     for this_,other_ in zip(self.regions.items(),other.regions.items()):
       if this_[0] != other_[0]: same=False
       if this_[1][1] != other_[1][1]: same = False
