@@ -21,11 +21,11 @@ Below is the implemented (and tested) features:
 * Read analysis results and extract temporal and spatial data
 * Plot analysis results at given coordinates
 
-## Getting started
+## Installation
 
-`PyGeoStudio` library will be further installable through the `pip` command.
-For instance, just download the repository and copy the `PyGeoStudio` folder where you create your Python script (which could be the folder containing your GeoStudio file, or not)
-You will need to install the following Python library: `matplotlib`, `numpy`.
+1. Clone or download this repository
+
+2. Go into the (extracted) folder and run `pip install .`
 
 ## Examples
 
