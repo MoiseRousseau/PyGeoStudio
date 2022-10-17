@@ -28,5 +28,4 @@ if __name__ == "__main__":
   #write modified study under new file
   out_file = "./test2.gsz"
   geofile.writeGeoStudioFile(out_file)
-  geofile2 = pgs.GeoStudioFile(out_file,mode='r')
   

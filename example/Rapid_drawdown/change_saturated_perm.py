@@ -9,12 +9,14 @@ if __name__ == "__main__":
   src_file = "Rapid drawdown.gsz" #specify the geostudio analyses file
   
   geofile = pgs.GeoStudioFile(src_file,mode='r') #open it with PyGeoStudio
-  mats = geofile.getMaterials()
-  for mat in mats:
+  mats = geofile.getMaterials() #get material defined in the analysis
+  for mat in mats: #print the material name properties
     print(mat)
     print("----------------------")
   
-  mat = geofile.getMaterialByName("Toe drain")
-  mat.hydraulic_function["KSat"] = str(1e-6)
-  print(mat)
+  mat = geofile.getMaterialByName("Toe drain") #get material nammed "Toe drain"
+  mat.hydraulic_function["KSat"] = str(1e-6) #change its saturated permeability
   
+  #write modified study under new file
+  out_file = "./rapid_drawdown_changed_perm.gsz"
+  geofile.writeGeoStudioFile(out_file)
