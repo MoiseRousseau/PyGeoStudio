@@ -14,7 +14,7 @@ class GeoStudioGeometry:
   def drawGeometry(self):
     fig, ax = plt.subplots()
     #draw points
-    ax.scatter(self.points, color='k')
+    ax.scatter(self.points[:,0], self.points[:,1], color='k')
     #draw lines
     for line in self.lines:
       X1, Y1 = self.points[line[0]]

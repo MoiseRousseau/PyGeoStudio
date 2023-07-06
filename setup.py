@@ -32,7 +32,13 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     python_requires='>=3.6, <4',
-    install_requires=['numpy', 'matplotlib'],
+    install_requires=[
+        'numpy',
+        'matplotlib',
+        'plyfile',
+        'bs4',
+        'lxml',
+    ],
     project_urls={ 
         'Bug Reports': 'https://github.com/MoiseRousseau/PyGeoStudio/issues',
         'Source': 'https://github.com/MoiseRousseau/PyGeoStudio/',
