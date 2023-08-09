@@ -61,31 +61,66 @@ class GeoStudioGeometry:
   def getPoints(self):
     return self.points
   
-  def createRegion(self, pts):
+  def createAllNewRegion(self, pts):
     """
     Create new points, new lines and a region based on the point coordinates given.
+    Point must be ordered clockwise or anti-clockwise.
+    Does not consider previous points, so if a already existed point is mentioned, there will be duplicated points.
     """
     n_pts_ini = len(self.points)
-    self.add_points(pts)
-    new_lines = [[x+n_pts_ini+1,x+n_pts_ini+2] for x in range(len(pts))]
-    new_lines[-1][1] = n_pts_ini+1
-    self.add_lines(new_lines)
+    self.addPoints(pts)
+    new_lines = [[x+n_pts_ini,x+n_pts_ini+1] for x in range(len(pts))]
+    new_lines[-1][1] = n_pts_ini
+    self.addLines(new_lines)
     new_region = [x+n_pts_ini+1 for x in range(len(pts))]
-    self.add_regions(new_region)
+    self.addRegion(new_region)
     return
   
   def addPoints(self, pts):
-    self.points = np.append(self.points, pts)
-    return
+    """
+    Add new point to the geometry
     
-  def addLines(self, lines):
-    self.lines = np.append(self.lines, new_lines)
+    :param pts: List of new point to add, size (N,2) with N the number of point to add
+    :type pts: np.array
+    :return: List of the new point ids in the study
+    """
+    start_id = len(self.points)
+    self.points = np.append(self.points, pts, axis=0)
+    return [start_id+i for i in range(len(pts))]
+    
+  def addLines(self, lines, check_duplicate=True):
+    """
+    Create new lines based on the existing points in the study with point ids given.
+    By default, check if the line already exists before to add it.
+    Points ids must be in GeoStudio convention (i.e. first point have id 1).
+    
+    :param lines: The lines to add to the study
+    :type lines: iterable
+    :param check_duplicate: Whether or not the check for duplicate before to add.
+    :type check_duplicate: bool, optional
+    """
+    self.lines = np.append(self.lines, lines, axis=0)
+    if check_duplicate: self.lines = np.unique(self.lines, axis=0)
     return
   
-  def addRegions(self, pt_ids):
+  def addRegion(self, pt_ids, create_lines=True):
+    """
+    Create a new region based on the existing points in the study with point ids given.
+    Points ids must be in GeoStudio convention (i.e. first point have id 1).
+    Automatically create lines if they not exists.
+    
+    :param pt_ids: Ids of the ordered point to create a new region
+    :type pt_ids: iterable
+    :param create_lines: Automatically create lines if they not exists.
+    :type create_lines: bool, optional
+    """
     new_id = len(self.regions) + 1
     new_reg = [pt_ids, []]
     self.regions[f"Regions-{new_id}"] = new_reg
+    if create_lines:
+        new_lines = [[pt_ids[i],pt_ids[i+1]] for i in range(len(pt_ids)-1)]
+        new_lines.append([pt_ids[-1],pt_ids[0]])
+        self.addLines(new_lines, True)
     return
     
   

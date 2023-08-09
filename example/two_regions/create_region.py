@@ -21,7 +21,7 @@ if __name__ == "__main__":
   points[0] += [-1,-1]
   #create new region
   new_region = [2,5,4]
-  geometry.addRegions(new_region)
+  geometry.addRegion(new_region)
   #show new geometry
   geometry.showGeometry()
   
