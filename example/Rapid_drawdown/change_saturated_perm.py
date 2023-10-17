@@ -15,8 +15,11 @@ if __name__ == "__main__":
     print("----------------------")
   
   mat = geofile.getMaterialByName("Toe drain") #get material nammed "Toe drain"
-  mat.hydraulic_function["KSat"] = str(1e-6) #change its saturated permeability
+  mat["Hydraulic"]["KSat"] = 1e-6 #change its saturated permeability
+  print(mat)
   
   #write modified study under new file
+  print("----------------------")
+  print("Write modified study in rapid_drawdown_changed_perm.gsz")
   out_file = "./rapid_drawdown_changed_perm.gsz"
   geofile.writeGeoStudioFile(out_file)

@@ -9,7 +9,7 @@ import datetime
 from PyGeoStudio.GeoAnalysis import GeoStudioAnalysis 
 from PyGeoStudio.GeoGeometry import GeoStudioGeometry 
 from PyGeoStudio.GeoContext import GeoStudioContext
-from PyGeoStudio.GeoMaterial import GeoStudioMaterial
+from PyGeoStudio.Material import Material
 
 class GeoStudioFile:
   def __init__(self, geostudio_file, mode='r'):
@@ -118,10 +118,19 @@ class GeoStudioFile:
     self.n_materials = int(element.attrib["Len"])
     for i in range(self.n_materials):
       mat_ = element[i]
-      new_mat = GeoStudioMaterial(self.src)
+      new_mat = Material()
       new_mat.read(mat_)
       self.materials.append(new_mat)
+    return
       
+  def __readReinforcements__(self, element):
+    self.n_reinforcements = int(element.attrib["Len"])
+    for i in range(self.n_reinforcements):
+      reinf_ = element[i]
+      new_reinf = GeoStudioReinforcement(self.src)
+      new_reinf.read(reinf_)
+      self.reinforcements.append(new_reinf)
+    return
   
   def printGeometries(self):
     print(self.geometries)
@@ -156,10 +165,9 @@ class GeoStudioFile:
   
   def getMaterialByName(self, name):
     for mat in self.materials:
-      if mat.name == name:
+      if mat["Name"] == name:
         return mat
-    print(f"Material {name} not found in file.")
-    raise ValueError
+    raise ValueError(f"Material {name} not found in file.")
   
   def getMaterials(self):
     return self.materials
@@ -168,8 +176,7 @@ class GeoStudioFile:
     for mat in self.materials:
       if mat.id == id:
         return mat
-    print(f"Material ID {name} not found in file.")
-    raise ValueError
+    raise ValueError(f"Material ID {name} not found in file.")
   
   def writeConfigurationFile(self, f_out, prettify=True):
     #build new ET
@@ -244,6 +251,7 @@ class GeoStudioFile:
       mesh_name = "mesh_" + mesh_id + ".ply"
       zip_out.writestr(mesh_name, data=self.src.read(mesh_name))
     zip_out.close()
+    print(f"GeoStudio study successfully written in {f_out}")
     return
   
   def __prettifyer__(self, f_out):
