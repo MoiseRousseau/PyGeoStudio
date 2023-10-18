@@ -39,11 +39,10 @@ class MaterialHydraulicFunction(BasePropertiesClass):
     }
     return
   
-  def __write__(self, et):
+  def __write__(self, sub):
     """
     Custom write function to write properties as an attribute.
     """
-    sub = ET.SubElement(et, "Hydraulic")
     sub.attrib = {x:y for x,y in self.data.items()}
     return
 
