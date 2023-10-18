@@ -23,7 +23,7 @@ class BasePropertiesClass:
     Write back the properties in an XML Tree to save the GeoStudio file
     """
     for tag,val in self.data.items():
-      if self.parameter_type[tag] is None:
+      if tag in self.parameter_type.keys() and self.parameter_type[tag] is None:
         sub = ET.SubElement(et, tag)
         val.__write__(sub)
         continue

@@ -1,15 +1,14 @@
-import plyfile
-import zipfile
-import os
+import plyfile, zipfile
+import os, sys
 import numpy as np
 import xml.etree.ElementTree as ET
-import sys
 import datetime
 
 from PyGeoStudio.GeoAnalysis import GeoStudioAnalysis 
 from PyGeoStudio.GeoGeometry import GeoStudioGeometry 
 from PyGeoStudio.GeoContext import GeoStudioContext
 from PyGeoStudio.Material import Material
+from PyGeoStudio.Reinforcement import Reinforcement
 
 class GeoStudioFile:
   def __init__(self, geostudio_file, mode='r'):
@@ -21,6 +20,7 @@ class GeoStudioFile:
     self.analysises = []
     self.contexts = []
     self.materials = []
+    self.reinforcements = []
     self.f_meshes = []
     self.meshes = []
     self.xml_items = []
@@ -79,6 +79,9 @@ class GeoStudioFile:
       elif element.tag == "Materials":
         self.__readMaterials__(element)
         self.xml_items.append("Materials")
+      elif element.tag == "Reinforcements":
+        self.__readReinforcements__(element)
+        self.xml_items.append("Reinforcements")
       else:
         #store the item for the write method
         self.xml_items.append(element)
@@ -93,7 +96,8 @@ class GeoStudioFile:
     for i in range(self.n_geometry):
       new_geom = GeoStudioGeometry()
       new_geom.read(element[i])
-      self.f_meshes.append("mesh_"+new_geom.mesh_id+".ply")
+      if new_geom.mesh_id:
+        self.f_meshes.append("mesh_"+new_geom.mesh_id+".ply")
       self.geometries.append(new_geom)
     return
   
@@ -127,8 +131,7 @@ class GeoStudioFile:
     self.n_reinforcements = int(element.attrib["Len"])
     for i in range(self.n_reinforcements):
       reinf_ = element[i]
-      new_reinf = GeoStudioReinforcement(self.src)
-      new_reinf.read(reinf_)
+      new_reinf = Reinforcement({x.tag:x.text for x in reinf_})
       self.reinforcements.append(new_reinf)
     return
   
@@ -163,20 +166,35 @@ class GeoStudioFile:
   def getAllAnalysis(self):
     return self.analysises
   
+  def getMaterials(self):
+    return self.materials
+  
   def getMaterialByName(self, name):
     for mat in self.materials:
       if mat["Name"] == name:
         return mat
     raise ValueError(f"Material {name} not found in file.")
   
-  def getMaterials(self):
-    return self.materials
-  
-  def getMaterialByID(self, id):
+  def getMaterialByID(self, id_):
     for mat in self.materials:
-      if mat.id == id:
+      if mat["ID"] == id_:
         return mat
-    raise ValueError(f"Material ID {name} not found in file.")
+    raise ValueError(f"Material ID {id_} not found in file.")
+  
+  def getReinforcements(self):
+    return self.reinforcements
+
+  def getReinforcementByName(self, name):
+    for x in self.reinforcements:
+      if x["Name"] == name:
+        return x
+    raise ValueError(f"Reinforcement {name} not found in file.")
+
+  def getReinforcementByID(self, id_):
+    for x in self.reinforcements:
+      if x["ID"] == id_:
+        return mat
+    raise ValueError(f"Reinforcements ID {id_} not found in file.")
   
   def writeConfigurationFile(self, f_out, prettify=True):
     #build new ET
@@ -216,6 +234,12 @@ class GeoStudioFile:
         for mat in self.materials:
           sub_mat = ET.SubElement(sub, "Material")
           mat.__write__(sub_mat)
+      elif element == "Reinforcements":
+        sub = ET.SubElement(out_root, "Reinforcements")
+        sub.attrib = {"Len":str(len(self.reinforcements))}
+        for reinf in self.reinforcements:
+          sub_reinf = ET.SubElement(sub, "Reinforcement")
+          reinf.__write__(sub_reinf)
       else:
         #store the item for the write method
         out_root.append(element)
@@ -248,6 +272,7 @@ class GeoStudioFile:
     for geom in self.geometries:
       mesh_set.add(geom.mesh_id)
     for mesh_id in mesh_set:
+      if mesh_id is None: continue
       mesh_name = "mesh_" + mesh_id + ".ply"
       zip_out.writestr(mesh_name, data=self.src.read(mesh_name))
     zip_out.close()

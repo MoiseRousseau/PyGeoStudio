@@ -5,6 +5,8 @@ class MaterialStressStrain(BasePropertiesClass):
   def __init__(self, data):
     self.data = data
     self.parameter_type = {
+      "ResidualWCPercent" : float,
+      "GeologicalStrengthIndex" : float,
       "ResponseType" : str,
       "UnitWeight" : float, 
       "CohesionPrime" : float,

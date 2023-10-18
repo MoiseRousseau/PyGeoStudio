@@ -1,3 +1,4 @@
 */__pycache__/*
 *.gsz
 build/*
+*.egg-info/*
