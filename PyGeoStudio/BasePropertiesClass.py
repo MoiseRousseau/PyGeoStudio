@@ -24,7 +24,8 @@ class BasePropertiesClass:
     """
     for tag,val in self.data.items():
       if self.parameter_type[tag] is None:
-        val.__write__(et)
+        sub = ET.SubElement(et, tag)
+        val.__write__(sub)
         continue
       sub = ET.SubElement(et, tag)
       sub.text = val
@@ -58,6 +59,12 @@ class BasePropertiesClass:
     self.data[parameter] = str(val)
     return
   
+  def getAllProperties(self):
+    """
+    Return a dictionnary holding all the properties of the class.
+    Note: you should know what to do when changing manually these properties.
+    """
+    return self.data
   
   def showAvailableProperties(self):
     """

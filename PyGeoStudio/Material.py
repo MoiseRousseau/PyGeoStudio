@@ -48,9 +48,9 @@ class MaterialHydraulicFunction(BasePropertiesClass):
     return
 
 
-class Material:
+class Material(BasePropertiesClass):
   def __init__(self):
-    self.mat_data = {}
+    self.data = {}
     self.parameter_type = {
       "ID" : int,
       "Name" : str, 
@@ -63,24 +63,12 @@ class Material:
     return
   
   def __str__(self):
-    res = f"Material {self.mat_data['Name']} (ID {self.mat_data['ID']}, RGB color {self.mat_data['Color']})\n"
-    res += f"Seep model: {self.mat_data['SeepModel']}\n"
-    res += f"Hydraulic Function: {self.mat_data['Hydraulic']}\n"
-    res += f"Slope model: {self.mat_data['SlopeModel']}\n"
-    res += f"Stress strain model parameter: {self.mat_data['StressStrain']}"
+    res = f"Material {self.data['Name']} (ID {self.data['ID']}, RGB color {self.data['Color']})\n"
+    res += f"Seep model: {self.data['SeepModel']}\n"
+    res += f"Hydraulic Function: {self.data['Hydraulic']}\n"
+    res += f"Slope model: {self.data['SlopeModel']}\n"
+    res += f"Stress strain model parameter: {self.data['StressStrain']}"
     return res
-  
-  def properties(self):
-    """
-    Show the available reinforcement object properties that is interfaced through PyGeoStudio
-    """
-    return self.mat_data
-  
-  def availableProperties(self):
-    """
-    Show the available reinforcement object properties that is interfaced through PyGeoStudio
-    """
-    return list(self.parameter_type.keys())
   
   def read(self, reinf_):
     """
@@ -88,49 +76,19 @@ class Material:
     """
     for prop in reinf_:
       if prop.tag == "StressStrain":
-        self.mat_data["StressStrain"] = MaterialStressStrain({x.tag:x.text for x in prop})
+        self.data["StressStrain"] = MaterialStressStrain({x.tag:x.text for x in prop})
       elif prop.tag == "Hydraulic":
-        self.mat_data["Hydraulic"] = MaterialHydraulicFunction(prop.attrib)
+        self.data["Hydraulic"] = MaterialHydraulicFunction(prop.attrib)
       else:
-        self.mat_data[prop.tag] = prop.text
-    return
-  
-  def __getitem__(self, parameter):
-    if parameter not in self.mat_data.keys():
-      return None
-    elif parameter not in self.parameter_type.keys():
-      warnings.warn("Property {parameter} defined in the material but not officially handled by PyGeoStudio. Return a properties non-interpreted as a string. Please contact for assistance.", UserWarning)
-      return self.mat_data[parameter]
-    else:
-      if self.parameter_type[parameter] is None:
-        return self.mat_data[parameter]
-      else:
-        return self.parameter_type[parameter](self.mat_data[parameter])
-  
-  def __setitem__(self, parameter, val):
-    if parameter not in self.mat_data.keys():
-      if parameter not in self.parameter_type.keys():
-        warnings.warn("Parameter {parameter} defined in the analysis but not officially handled by PyGeoStudio. Please contact for assistance.", UserWarning)
-    if val is True: val = 'true'
-    if val is False: val = 'false'
-    self.mat_data[parameter] = str(val)
-    return
-  
-  def write(self, et):
-    for tag,val in self.mat_data.items():
-      if self.parameter_type[tag] is None:
-        val.__write__(et)
-        continue
-      sub = ET.SubElement(et, tag)
-      sub.text = val
+        self.data[prop.tag] = prop.text
     return
   
   def __eq__(self, other):
     if type(other) != type(other):
       return False
-    if len(self.mat_data) != len(other.mat_data):
+    if len(self.data) != len(other.data):
       return False
-    for prop,val in self.mat_data:
-      if other.mat_data[prop] != val:
+    for prop,val in self.data:
+      if other.data[prop] != val:
          return False
     return True

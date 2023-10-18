@@ -215,7 +215,7 @@ class GeoStudioFile:
         sub.attrib = {"Len":str(len(self.materials))}
         for mat in self.materials:
           sub_mat = ET.SubElement(sub, "Material")
-          mat.write(sub_mat)
+          mat.__write__(sub_mat)
       else:
         #store the item for the write method
         out_root.append(element)
