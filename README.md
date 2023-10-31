@@ -11,15 +11,15 @@ But, why do you need an external software such as Python to read your file while
 6. Perform automatic calibration / optimisation
 7. The idea you have in mind which is not included in the 6 before
 
-## Features
+## Use case (TODO)
 
-Below is the implemented (and tested) features:
-
-* Read (and write in the futur) GeoStudio file
-* Change analysis properties (geometry, materials, ...)
-* Draw the conceptual model created in GeoStudio
-* Read analysis results and extract temporal and spatial data
-* Plot analysis results at given coordinates
+* Scripting
+* Statistical modelling / Sensitivity analysis
+* Automatic calibration
+* Design optimization
+* Real-time forecast and predictive modelling
+* Model converger
+* Post-processing (Paraview, Matplotlib)
 
 ## Installation
 

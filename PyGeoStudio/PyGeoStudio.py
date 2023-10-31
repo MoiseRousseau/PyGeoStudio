@@ -3,12 +3,15 @@ import os, sys
 import numpy as np
 import xml.etree.ElementTree as ET
 import datetime
+from prettytable import PrettyTable
 
-from PyGeoStudio.GeoAnalysis import GeoStudioAnalysis 
-from PyGeoStudio.GeoGeometry import GeoStudioGeometry 
-from PyGeoStudio.GeoContext import GeoStudioContext
-from PyGeoStudio.Material import Material
-from PyGeoStudio.Reinforcement import Reinforcement
+from .Analysis import Analysis 
+from .Geometry import Geometry 
+from .Context import Context
+from .Material import Material
+from .Reinforcement import Reinforcement
+from .Mesh import Mesh
+from .Results import Results
 
 class GeoStudioFile:
   def __init__(self, geostudio_file, mode='r'):
@@ -17,38 +20,33 @@ class GeoStudioFile:
     self.open_mode = mode
     
     self.geometries = []
-    self.analysises = []
+    self.meshes = []
+    self.analyses = []
     self.contexts = []
     self.materials = []
     self.reinforcements = []
-    self.f_meshes = []
-    self.meshes = []
     self.xml_items = []
     self.initialize()
     return
   
+  def __getitem__(self, item):
+    match item:
+      case "Analyses": return self.analyses
+      case "Materials": return self.materials
+      case "Reinforcements": return self.reinforcements
+      case "Functions": return self.mesh_id
+      case _: 
+        raise ValueError(f"No accessible item of name {item} through PyGeoStudio interface")
+  
   def showAnalysisTree(self, detail_level=0):
     print(f"GeoStudio file: {self.f_src}")
     #first pass, those with no parentID
-    for analysis in self.analysises:
-      print(analysis.ID, analysis.Name)
+    res = PrettyTable()
+    res.field_names = ["ID","Name","ParentID"]
+    for analysis in self.analyses:
+      res.add_row([analysis['ID'],analysis['Name'],analysis['ParentID']])
+    print(res)
     return
-  
-  def getMeshes(self):
-    """
-    Return the available meshes in the GeoStudio root folder
-    """
-    filelist = [x.filename for x in self.src.filelist]
-    return [x for x in filelist if ((".ply" in x) and ("/" not in x))]
-  
-  def extractMesh(self, name):
-    filelist = [x.filename for x in self.src.filelist]
-    if name not in filelist:
-      print(f"No mesh nammed {name} found. Available meshes:")
-      self.printMeshes()
-    self.src.extract(name)
-    return
-    
   
   def initialize(self):
     #open file
@@ -86,34 +84,43 @@ class GeoStudioFile:
         #store the item for the write method
         self.xml_items.append(element)
     
-    #for mesh in self.f_meshes:
-      #self.meshes.append(self.src.read(mesh))
-    
+    #Create analysis structure, i.e. define Geometry, Mesh, Context and Results
+    for analysis in self.analyses:
+      geom = self.getGeometryByID(analysis["GeometryId"])
+      f_mesh = analysis["Name"].replace('/','&3')+"/Mesh.ply"
+      geom.mesh = Mesh(self.src.open(f_mesh))
+      analysis["Geometry"] = geom
+      analysis["Results"] = Results(
+        self.src,
+        analysis["Name"],
+        time=tuple(float(x["ElapsedTime"]) for x in analysis["TimeIncrements"]["TimeSteps"]) if analysis["Method"] == "Transient" else [-1],
+        mesh=geom.mesh,
+      )
+    for context in self.contexts:
+      analysis = self.getAnalysisByID(context["AnalysisID"])
+      analysis["Context"] = context
     return
     
   def __readGeometry__(self,element):
     self.n_geometry = int(element.attrib["Len"])
     for i in range(self.n_geometry):
-      new_geom = GeoStudioGeometry()
+      new_geom = Geometry()
       new_geom.read(element[i])
-      if new_geom.mesh_id:
-        self.f_meshes.append("mesh_"+new_geom.mesh_id+".ply")
       self.geometries.append(new_geom)
     return
   
   def __readAnalysis__(self,element):
     self.n_analysis = int(element.attrib["Len"])
     for i in range(self.n_analysis):
-      new_analysis = GeoStudioAnalysis(self.src)
-      new_analysis.Index_in_xml = i
+      new_analysis = Analysis({})#{x.tag:x.text for x in element[i]})
       new_analysis.read(element[i])
-      self.analysises.append(new_analysis)
+      self.analyses.append(new_analysis)
     return
   
   def __readContexts__(self, element):
-    self.n_contexts = int(element.attrib["Len"])
-    for i in range(self.n_contexts):
-      new_context = GeoStudioContext()
+    n_contexts = int(element.attrib["Len"])
+    for i in range(n_contexts):
+      new_context = Context({})
       new_context.read(element[i])
       self.contexts.append(new_context)
     return
@@ -139,50 +146,48 @@ class GeoStudioFile:
     print(self.geometries)
     return
   
-  def getGeometry(self, id_):
+  def getGeometryByID(self, id_):
+    """
+    Return the geometry corresponding to the ID given
+    """
+    if id_ > len(self.geometries): raise ValueError(f"No such geometry with ID {id_}")
     return self.geometries[id_-1]
   
-  def __getitem__(self, key):
-    for analysis in self.analysises:
-      if analysis.Name == key: 
-        analysis.__initiate__()
-        analysis.defineGeometry(self.getGeometry(analysis.GeometryId))
-        for context in self.contexts:
-          if context.analysisID == analysis.ID:
-            break
-        analysis.defineContext(context)
+  def getAnalysisByID(self, id_):
+    """
+    Return the analysis in the analysis tree corresponding to the ID given.
+    """
+    for analysis in self.analyses:
+      if analysis["ID"] == id_: 
         return analysis
-    print(f"Analysis {key} not found in file.")
-    raise ValueError
+    raise ValueError(f"Analysis ID {id_} not found in file.")
   
-  def getAnalysis(self, key):
-    for analysis in self.analysises:
-      if analysis.Name == key: 
-        analysis.__initiate__()
+  def getAnalysisByName(self, name):
+    """
+    Return the analysis in the analysis tree corresponding to the name given.
+    """
+    for analysis in self.analyses:
+      if analysis["Name"] == name: 
         return analysis
-    print(f"Analysis {key} not found in file.")
-    raise ValueError
-  
-  def getAllAnalysis(self):
-    return self.analysises
-  
-  def getMaterials(self):
-    return self.materials
+    raise ValueError(f"Analysis {name} not found in file.")
   
   def getMaterialByName(self, name):
+    """
+    Return the material corresponding to the name given.
+    """
     for mat in self.materials:
       if mat["Name"] == name:
         return mat
     raise ValueError(f"Material {name} not found in file.")
   
   def getMaterialByID(self, id_):
+    """
+    Return the material corresponding to the ID given.
+    """
     for mat in self.materials:
       if mat["ID"] == id_:
         return mat
     raise ValueError(f"Material ID {id_} not found in file.")
-  
-  def getReinforcements(self):
-    return self.reinforcements
 
   def getReinforcementByName(self, name):
     for x in self.reinforcements:
@@ -215,19 +220,19 @@ class GeoStudioFile:
         sub.attrib = {"Len":str(len(self.geometries))}
         for geom in self.geometries:
           sub_geom = ET.SubElement(sub, "Geometry")
-          geom.write(sub_geom)
+          geom.__write__(sub_geom)
       elif element == "Analyses":
         sub = ET.SubElement(out_root, "Analyses")
-        sub.attrib = {"Len":str(len(self.analysises))}
-        for analysis in self.analysises:
+        sub.attrib = {"Len":str(len(self.analyses))}
+        for analysis in self.analyses:
           sub_analysis = ET.SubElement(sub, "Analysis")
-          analysis.write(sub_analysis)
+          analysis.__write__(sub_analysis)
       elif element == "Contexts":
         sub = ET.SubElement(out_root, "Contexts")
         sub.attrib = {"Len":str(len(self.contexts))}
         for context in self.contexts:
           sub_context = ET.SubElement(sub, "Context")
-          context.write(sub_context)
+          context.__write__(sub_context)
       elif element == "Materials":
         sub = ET.SubElement(out_root, "Materials")
         sub.attrib = {"Len":str(len(self.materials))}
@@ -249,23 +254,19 @@ class GeoStudioFile:
       self.__prettifyer__(f_out)
     return
   
-  def writeGeoStudioFile(self, f_out, compresslevel=1, overwrite=False):
+  def writeGeoStudioFile(self, f_out, compresslevel=1):
     ext = f_out.split('.')[-1]
     if ext != "gsz":
       f_out += ".gsz"
     prefix = f_out.split('/')[-1][:-4]
     if f_out == self.f_src:
-      if not overwrite:
-        print("Warning! You are overwriting the source GeoStudio file")
-        print("Please set \"overwrite\" to True to proceed")
-        return
-      else:
-        print("TODO: write special method")
-        return
+      raise ValueError("Cannot overwriting the source GeoStudio file. Please write within another file.")
     else:
-      zip_out = zipfile.ZipFile(f_out, mode="w", 
-                                compression=zipfile.ZIP_DEFLATED, 
-                                compresslevel=compresslevel)
+      zip_out = zipfile.ZipFile(
+        f_out, mode="w", 
+        compression=zipfile.ZIP_DEFLATED, 
+        compresslevel=compresslevel
+      )
     with zip_out.open(prefix + ".xml", "w") as xml_out:
       self.writeConfigurationFile(xml_out, prettify=False)
     mesh_set = set()
@@ -297,7 +298,7 @@ class GeoStudioFile:
     if not self.geometries == other.geometries: 
       same = False
       print("geometries not the same")
-    if not self.analysises == other.analysises: 
+    if not self.analyses == other.analysises: 
       same = False
       print("analysis not the same")
     if not self.contexts == other.contexts:

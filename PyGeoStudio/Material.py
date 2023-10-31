@@ -28,7 +28,6 @@ class MaterialHydraulicFunction(BasePropertiesClass):
   Note the properties are defined as an attribute in GeoStudio file, so a custom __write__ function is needed.
   """
   def __init__(self, data):
-    print(data)
     self.data = data
     self.parameter_type = {
       # If Sat only

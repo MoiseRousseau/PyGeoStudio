@@ -38,6 +38,7 @@ setup(
         'plyfile',
         'bs4',
         'lxml',
+        'prettytable',
     ],
     project_urls={ 
         'Bug Reports': 'https://github.com/MoiseRousseau/PyGeoStudio/issues',

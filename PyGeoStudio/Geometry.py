@@ -2,16 +2,29 @@ import matplotlib.pyplot as plt
 import numpy as np
 import xml.etree.ElementTree as ET
 
-class GeoStudioGeometry:
+# We do not use the BasePropertiesClass as there is too much specificities here.
+# Or maybe the base class is not general enough ... ?
+
+class Geometry:
   def __init__(self):
     self.points = None
     self.lines = None
     self.mesh_id = None
+    self.mesh = None
     self.regions = {}
     self.other_elem = []
     return
   
-  def drawGeometry(self):
+  def __getitem__(self, parameter):
+    match parameter:
+      case "Points": return self.points
+      case "Lines": return self.lines
+      case "Regions": return self.regions
+      case "MeshId": return self.mesh_id
+      case "Mesh": return self.mesh
+    return
+  
+  def draw(self, show=True):
     fig, ax = plt.subplots()
     #draw points
     ax.scatter(self.points[:,0], self.points[:,1], color='k')
@@ -20,14 +33,9 @@ class GeoStudioGeometry:
       X1, Y1 = self.points[line[0]]
       X2, Y2 = self.points[line[1]]
       ax.plot([X1,X2],[Y1,Y2], 'k')
-    #draw region
-    #TODO
+    if show:
+      plt.show()
     return fig,ax
-  
-  def showGeometry(self):
-    fig,ax = self.drawGeometry()
-    plt.show()
-    return
   
   def read(self, element):
     for property_ in element:
@@ -58,12 +66,10 @@ class GeoStudioGeometry:
         self.other_elem.append(property_)
     return
   
-  def getPoints(self):
-    return self.points
-  
   def createRegion(self, pts):
     """
     Create new points, new lines and a region based on the point coordinates given.
+    Must be given in order so they form a convex and non-intersecting polygon when joined successively.
     """
     n_pts_ini = len(self.points)
     self.add_points(pts)
@@ -87,9 +93,8 @@ class GeoStudioGeometry:
     new_reg = [pt_ids, []]
     self.regions[f"Regions-{new_id}"] = new_reg
     return
-    
   
-  def write(self, et):
+  def __write__(self, et):
     #points
     sub = ET.SubElement(et, "Points")
     sub.attrib = {"Len":str(len(self.points))}
@@ -128,23 +133,11 @@ class GeoStudioGeometry:
       et.append(prop)
     return
   
-  def __eq__(self, other):
-    print("-----------------------\nTest Geometry")
-    same = True
-    if self.mesh_id != other.mesh_id: same = False
-    for this_,other_ in zip(self.regions.items(),other.regions.items()):
-      if this_[0] != other_[0]: same=False
-      if this_[1][1] != other_[1][1]: same = False
-      if same == False:
-        print("regions not the same")
-    if not np.all(self.points == other.points):
-      same = False
-      print("points not the same")
-      print(self.points)
-      print(other.points)
-    if not np.all(self.lines == other.lines):
-      same = False
-      print("lines not the same")
-    return same
+  
+  def importMesh(self, mesh):
+    """
+    Import a externally defined mesh for the current geometry
+    """
+    return
     
 
