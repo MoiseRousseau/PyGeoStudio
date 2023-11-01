@@ -42,9 +42,10 @@ class TimeIncrements(BasePropertiesClass):
     for tag,val in self.data.items():
       if tag == "TimeSteps":
         sub = ET.SubElement(et, tag)
+        sub.attrib = {"Len" : str(len(self.data["TimeSteps"]))}
         for time in self.data["TimeSteps"]:
-          sub = ET.SubElement(et, tag)
-          sub.attrib = time
+          sub_time = ET.SubElement(sub, "TimeStep")
+          sub_time.attrib = time
         continue
       if tag in self.parameter_type.keys() and self.parameter_type[tag] is None:
         sub = ET.SubElement(et, tag)
