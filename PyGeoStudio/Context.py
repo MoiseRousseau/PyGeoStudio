@@ -48,11 +48,15 @@ class Context(BasePropertiesClass):
     for tag,val in self.data.items():
       match tag:
         case "GeometryUsesMaterials":
+          sub = ET.SubElement(et, tag)
+          sub.attrib = {"Len" : str(len(self.data[tag]))}
           for reg, mat_id in self.data["GeometryUsesMaterials"].items():
             sub_gum = ET.SubElement(sub, "GeometryUsesMaterial")
             sub_gum.attrib["ID"] = reg
             sub_gum.attrib["Entry"] = str(mat_id)
         case "GeometryUsesHydraulicBCs":
+          sub = ET.SubElement(et, tag)
+          sub.attrib = {"Len" : str(len(self.data[tag]))}
           for reg, mat_id in self.data["GeometryUsesHydraulicBCs"].items():
             sub_gum = ET.SubElement(sub, "GeometryUsesHydraulicBCs")
             sub_gum.attrib["ID"] = reg
