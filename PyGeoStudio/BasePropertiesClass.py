@@ -11,6 +11,8 @@ class BasePropertiesClass:
   * data: data is a dictionnary that contains all the properties the user can access in PyGeoStudio
   * parameter_type: explicitely define the type of the properties to interact with in Python
   * my_data: list of properties only defined in PyGeoStudio for more intuitive interfacing
+
+  In parameter_type, if the value is dict, it is written as a attrib
   """
   data = {}
   parameter_type = {} #data from the GeoStudio file
@@ -65,17 +67,7 @@ class BasePropertiesClass:
     Read the XML element tree and populate the class
     """
     for prop in et:
-      if self.parameter_type.get(prop.tag,1) is None:
-        self.custom_read(prop)
-        continue
       self.data[prop.tag] = prop.text
-    return
-
-  def custom_read(self,prop):
-    """
-    Dedicated read for property prop (defined in children class)
-    """
-    self.data[prop.tag] = prop.text
     return
 
   def __write__(self, et):
@@ -83,12 +75,15 @@ class BasePropertiesClass:
     Write back the properties in an XML Tree to save the GeoStudio file
     """
     for tag,val in self.data.items():
-      if tag in self.my_data: continue #property defined in this lib
-      if tag in self.parameter_type.keys() and self.parameter_type[tag] is None:
+      if tag in self.my_data: continue #skip property defined in this lib
+      if self.parameter_type.get(tag, 1) is None:
         sub = ET.SubElement(et, tag)
         val.__write__(sub)
         continue
       sub = ET.SubElement(et, tag)
+      if isinstance(val, dict):
+        sub.attrib = val
+        continue
       if not isinstance(val, str):
         raise ValueError(f"Can't write property {tag} because value is not a string: {val}")
       sub.text = val

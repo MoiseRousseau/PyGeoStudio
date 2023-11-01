@@ -77,11 +77,11 @@ class Analysis(BasePropertiesClass):
       "ExcludeInitDeformation" : bool,
       "Results": None,
       "TimeIncrements" : None,
+      "ComputedPhysics" : dict,
        #TODO below
 #      "ConvergenceCriteria" : None,
 #      "IterationControls" : None,
 #      "UnderRelaxationCriteria" : None,
-#      "ComputedPhysics" : None,
     }
     self.my_data = ["Geometry", "Context", "Results"]
     return
@@ -90,14 +90,17 @@ class Analysis(BasePropertiesClass):
     res = f"<PyGeoStudio.Analysis object, (ID: {self.data['ID']}, Name: \"{self.data['Name']}\")>"
     return res
   
-  def custom_read(self,prop):
-    match prop.tag:
-      case "TimeIncrements":
-        timeinc = TimeIncrements({})
-        timeinc.read(prop)
-        self.data["TimeIncrements"] = timeinc
-      case _:
-        raise NotImplementedError(f"Custom read for property \"{prop.tag}\" to be defined in Analysis class")
+  def read(self,et):
+    for prop in et:
+      match prop.tag:
+        case "TimeIncrements":
+          timeinc = TimeIncrements({})
+          timeinc.read(prop)
+          self.data["TimeIncrements"] = timeinc
+        case "ComputedPhysics":
+          self.data["ComputedPhysics"] = prop.attrib
+        case _:
+          self.data[prop.tag] = prop.text
   
   def setGeometry(self, geom):
     self.data["Geometry"] = geom   # pointer toward the geometry, so we can access the geometry defined in this class

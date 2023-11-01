@@ -4,6 +4,7 @@ import warnings
 
 from .BasePropertiesClass import BasePropertiesClass
 
+
 class Context(BasePropertiesClass):
   """
   Context class couples analyses with the material distribution and boundary conditions
@@ -42,7 +43,7 @@ class Context(BasePropertiesClass):
         self.data[property_.tag] = property_.text
     return
   
-  def write(self, et):
+  def __write__(self, et):
     #analysis ID
     for tag,val in self.data.items():
       match tag:
