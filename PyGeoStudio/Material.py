@@ -28,7 +28,6 @@ class MaterialHydraulicFunction(BasePropertiesClass):
   Note the properties are defined as an attribute in GeoStudio file, so a custom __write__ function is needed.
   """
   def __init__(self, data):
-    print(data)
     self.data = data
     self.parameter_type = {
       # If Sat only
@@ -77,7 +76,9 @@ class Material(BasePropertiesClass):
     """
     for prop in reinf_:
       if prop.tag == "StressStrain":
-        self.data["StressStrain"] = MaterialStressStrain({x.tag:x.text for x in prop})
+        x = MaterialStressStrain({})
+        x.read(prop)
+        self.data["StressStrain"] = x
       elif prop.tag == "Hydraulic":
         self.data["Hydraulic"] = MaterialHydraulicFunction(prop.attrib)
       else:
