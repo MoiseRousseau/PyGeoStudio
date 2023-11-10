@@ -76,7 +76,9 @@ class Material(BasePropertiesClass):
     """
     for prop in reinf_:
       if prop.tag == "StressStrain":
-        self.data["StressStrain"] = MaterialStressStrain({x.tag:x.text for x in prop})
+        x = MaterialStressStrain({})
+        x.read(prop)
+        self.data["StressStrain"] = x
       elif prop.tag == "Hydraulic":
         self.data["Hydraulic"] = MaterialHydraulicFunction(prop.attrib)
       else:

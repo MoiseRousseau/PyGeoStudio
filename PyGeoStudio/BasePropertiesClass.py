@@ -67,6 +67,7 @@ class BasePropertiesClass:
     Read the XML element tree and populate the class
     """
     for prop in et:
+      if prop.text is None and prop.attrib.get("Missing") == "true": continue
       self.data[prop.tag] = prop.text
     return
 

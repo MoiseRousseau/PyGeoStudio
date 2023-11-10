@@ -9,7 +9,7 @@ if __name__ == "__main__":
   src_file = "Reinforcement with Anchors.gsz" #specify the geostudio study file
   
   geofile = pgs.GeoStudioFile(src_file,mode='r') #open it with PyGeoStudio
-  reinfs = geofile.getReinforcements() #get reinforcements defined in the study
+  reinfs = geofile["Reinforcements"] #get reinforcements defined in the study
   for reinf in reinfs: #print the reinforcement properties
     print(reinf)
     print("----------------------")
