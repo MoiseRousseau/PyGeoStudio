@@ -1,0 +1,16 @@
+GeoStudioFile:
+  - Analysis:
+    - Context:
+      - GeometryUsesMaterials
+      - HydraulicBCDistribution
+    - Geometry:
+      - Mesh
+    - Results
+    - TimeIncrements
+  - BoundaryCondition
+  - Function   
+  - Material:
+    - Hydraulic
+    - StressStrain
+  - Reinforcement
+  - StabilityItem

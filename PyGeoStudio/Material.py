@@ -2,6 +2,21 @@ import xml.etree.ElementTree as ET
 from .BasePropertiesClass import BasePropertiesClass
 
 class MaterialStressStrain(BasePropertiesClass):
+  """
+  :param ResidualWCPercent:
+  :param GeologicalStrengthIndex:
+  :param ResponseType:
+  :param UnitWeight:
+  :param CohesionPrime:
+  :param PhiPrime:
+  :param Rf:
+  :param OCRatio:
+  :param ConsolLambda:
+  :param OCKappa:
+  :param InitVoidRatio:
+  :param YieldSurfaceShape:
+  :param LimitOfAnisotropy:
+  """
   def __init__(self, data):
     self.data = data
     self.parameter_type = {
@@ -23,10 +38,8 @@ class MaterialStressStrain(BasePropertiesClass):
 
 
 class MaterialHydraulicFunction(BasePropertiesClass):
-  """
-  Defined a hydraulic function.
-  Note the properties are defined as an attribute in GeoStudio file, so a custom __write__ function is needed.
-  """
+  #Defined a hydraulic function.
+  #Note the properties are defined as an attribute in GeoStudio file, so a custom __write__ function is needed.
   def __init__(self, data):
     self.data = data
     self.parameter_type = {
@@ -49,6 +62,20 @@ class MaterialHydraulicFunction(BasePropertiesClass):
 
 
 class Material(BasePropertiesClass):
+  """  
+  :param ID: ID of the material in GeoStudio file. Do not change this property unless you know what your are doing
+  :type ID: int
+  :param Name: Name of the material in GeoStudio study.
+  :type Name: str
+  :param SeepModel: Hydraulic model in SEEP (SatOnly or SatUnsat).
+  :type SeepModel: str
+  :param SlopeModel: Geomechanical model in SLOPE (MohrCoulomb, ...)
+  :type SlopeModel: str
+  :param Hydraulic: Hydraulic properties of the material
+  :type Hydraulic: MaterialHydraulicFunction object
+  :param StressStrain: Geotechnical properties of the material
+  :type StressStrain: MaterialStressStrain object
+  """
   def __init__(self):
     self.data = {}
     self.parameter_type = {
@@ -56,7 +83,7 @@ class Material(BasePropertiesClass):
       "Name" : str, 
       "Color" : list,
       "SeepModel" : str,
-      "SlopeModel" : float, 
+      "SlopeModel" : str,
       "Hydraulic" : None, #None means another XML Tree
       "StressStrain" : None,
     }
@@ -70,11 +97,13 @@ class Material(BasePropertiesClass):
     res += f"Stress strain model parameter: {self.data['StressStrain']}"
     return res
   
-  def read(self, reinf_):
+  def read(self, mat_):
     """
     Read material information contained in XML tree under Material
+    
+    :meta private:
     """
-    for prop in reinf_:
+    for prop in mat_:
       if prop.tag == "StressStrain":
         x = MaterialStressStrain({})
         x.read(prop)
@@ -84,13 +113,4 @@ class Material(BasePropertiesClass):
       else:
         self.data[prop.tag] = prop.text
     return
-  
-  def __eq__(self, other):
-    if type(other) != type(other):
-      return False
-    if len(self.data) != len(other.data):
-      return False
-    for prop,val in self.data:
-      if other.data[prop] != val:
-         return False
-    return True
+

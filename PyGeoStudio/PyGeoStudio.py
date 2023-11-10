@@ -14,6 +14,12 @@ from .Mesh import Mesh
 from .Results import Results
 
 class GeoStudioFile:
+  """
+  Main driver of the librairy that read GeoStudio .gsz file and interface its content through Python
+  
+  :param geostudio_file: Path to the GeoStudio file
+  :type geostudio_file: str
+  """
   def __init__(self, geostudio_file, mode='r'):
     self.f_src = geostudio_file
     self.src = None
@@ -38,23 +44,15 @@ class GeoStudioFile:
       case _: 
         raise ValueError(f"No accessible item of name {item} through PyGeoStudio interface")
   
-  def showAnalysisTree(self, detail_level=0):
-    print(f"GeoStudio file: {self.f_src}")
-    #first pass, those with no parentID
-    res = PrettyTable()
-    res.field_names = ["ID","Name","ParentID"]
-    for analysis in self.analyses:
-      res.add_row([analysis['ID'],analysis['Name'],analysis['ParentID']])
-    print(res)
-    return
-  
   def initialize(self):
+    """
+    :meta private:
+    """
     #open file
     if os.path.isfile(self.f_src):
       self.src = zipfile.ZipFile(self.f_src, self.open_mode)
     else:
-      print(f"File {self.f_src} doesn't exist in the current directory")
-      raise ValueError
+      raise IOError(f"File {self.f_src} doesn't exist in the current directory")
     #parse geoslope input
     prefix = self.f_src.split('/')[-1][:-4]
     self.main_xml = ET.parse(self.src.open(prefix+'.xml'))
@@ -141,67 +139,151 @@ class GeoStudioFile:
       new_reinf = Reinforcement({x.tag:x.text for x in reinf_})
       self.reinforcements.append(new_reinf)
     return
+    
   
-  def printGeometries(self):
-    print(self.geometries)
-    return
-  
-  def getGeometryByID(self, id_):
+  def showAnalysisTree(self):
     """
-    Return the geometry corresponding to the ID given
+    Print the analysis tree in the GeoStudio file with analysis ID, name and parent ID if defined.
     """
-    if id_ > len(self.geometries): raise ValueError(f"No such geometry with ID {id_}")
-    return self.geometries[id_-1]
-  
-  def getAnalysisByID(self, id_):
-    """
-    Return the analysis in the analysis tree corresponding to the ID given.
-    """
+    print(f"GeoStudio file: {self.f_src}")
+    #first pass, those with no parentID
+    res = PrettyTable()
+    res.field_names = ["ID","Name","ParentID"]
     for analysis in self.analyses:
-      if analysis["ID"] == id_: 
-        return analysis
-    raise ValueError(f"Analysis ID {id_} not found in file.")
+      res.add_row([analysis['ID'],analysis['Name'],analysis['ParentID']])
+    print(res)
+    return
   
   def getAnalysisByName(self, name):
     """
     Return the analysis in the analysis tree corresponding to the name given.
+    
+    :param name: Name of the analysis (must match the name in the analysis tree)
+    :type name: str
+    :raise ValueError: No analysis found with the given name.
+    :return: The analysis with the given name.
+    :rtype: Analysis object
     """
     for analysis in self.analyses:
       if analysis["Name"] == name: 
         return analysis
     raise ValueError(f"Analysis {name} not found in file.")
   
+  def getAnalysisByID(self, ID):
+    """
+    Return the analysis in the analysis tree corresponding to the ID given.
+    
+    :param ID: ID of the analysis
+    :type ID: int
+    """
+    for analysis in self.analyses:
+      if analysis["ID"] == ID: 
+        return analysis
+    raise ValueError(f"Analysis ID {ID} not found in file.")
+  
+  def getGeometryByID(self, ID):
+    """
+    Return the geometry corresponding to the ID given.
+    
+    :param ID: ID of the geometry
+    :type ID: int
+    :meta private:
+    """
+    if ID > len(self.geometries): raise ValueError(f"No such geometry with ID {ID}")
+    return self.geometries[ID-1]
+
+  def showMaterials(self, detail=0):
+    """
+    Print the material defined within the GeoStudio file.
+    
+    :param detail: Show a table listing minimal properties of the materials (0) or print exhaustive information (1)
+    :type detail: int (0 or 1)
+    """
+    if detail != 0:
+      for mat in self.materials: #print the material name properties
+        print(mat)
+        print("----------------------")
+    else:
+      res = PrettyTable()
+      res.field_names = ["ID","Name","Seep Model","Slope Model"]
+      for mat in self.materials:
+        res.add_row([mat['ID'],mat['Name'],mat['SeepModel'],mat['SlopeModel']])
+      print(res)
+    return
+  
   def getMaterialByName(self, name):
     """
     Return the material corresponding to the name given.
+    
+    :param name: Name of the material
+    :type name: str
     """
     for mat in self.materials:
       if mat["Name"] == name:
         return mat
     raise ValueError(f"Material {name} not found in file.")
   
-  def getMaterialByID(self, id_):
+  def getMaterialByID(self, ID):
     """
     Return the material corresponding to the ID given.
+    
+    :param ID: ID of the material
+    :type ID: int
     """
     for mat in self.materials:
-      if mat["ID"] == id_:
+      if mat["ID"] == ID:
         return mat
-    raise ValueError(f"Material ID {id_} not found in file.")
+    raise ValueError(f"Material ID {ID} not found in file.")
+
+  def showReinforcements(self, detail=0):
+    """
+    Print the reinforcements defined within the GeoStudio file.
+    
+    :param detail: Show a table listing minimal properties of the reinforcements (0) or print exhaustive information (1)
+    :type detail: int (0 or 1)
+    """
+    if detail != 0:
+      for reinf in self.reinforcements: #print the material name properties
+        print(reinf)
+        print("----------------------")
+    else:
+      res = PrettyTable()
+      res.field_names = ["ID","Name", "Type"]
+      for reinf in self.reinforcements:
+        res.add_row([reinf['ID'],reinf['Name'],reinf['Type']])
+      print(res)
+    return
 
   def getReinforcementByName(self, name):
+    """
+    Return the reinforcement corresponding to the name given.
+    
+    :param name: Name of the reinforcement
+    :type name: str
+    """
     for x in self.reinforcements:
       if x["Name"] == name:
         return x
     raise ValueError(f"Reinforcement {name} not found in file.")
 
-  def getReinforcementByID(self, id_):
+  def getReinforcementByID(self, ID):
+    """
+    Return the reinforcement corresponding to the ID given.
+    
+    :param ID: ID of the material
+    :type ID: int
+    """
     for x in self.reinforcements:
-      if x["ID"] == id_:
-        return mat
-    raise ValueError(f"Reinforcements ID {id_} not found in file.")
+      if x["ID"] == ID:
+        return x
+    raise ValueError(f"Reinforcements ID {ID} not found in file.")
   
   def writeConfigurationFile(self, f_out, prettify=True):
+    """
+    Write the main xml file
+    
+    :meta private:
+    """
     #build new ET
     src_root = self.main_xml.getroot()
     out_root = ET.Element(src_root.tag)
@@ -255,6 +337,14 @@ class GeoStudioFile:
     return
   
   def writeGeoStudioFile(self, f_out, compresslevel=1):
+    """
+    Write the (modified) study under a new file
+    
+    :param f_out: Name of the output file
+    :type f_out: str
+    :param compresslevel: Level of compression of the output file from 0 (uncompressed) to 9 (fully compressed) (optional, default=1) 
+    :type compresslevel: int
+    """
     ext = f_out.split('.')[-1]
     if ext != "gsz":
       f_out += ".gsz"
@@ -289,30 +379,4 @@ class GeoStudioFile:
     with open(f_out, 'w') as out:
       out.write(data)
     return
-  
-  def __eq__(self, other):
-    """
-    For test purpose
-    """
-    same = True
-    if not self.geometries == other.geometries: 
-      same = False
-      print("geometries not the same")
-    if not self.analyses == other.analysises: 
-      same = False
-      print("analysis not the same")
-    if not self.contexts == other.contexts:
-      same = False
-      print("contexts not the same")
-    if not self.materials == other.materials:
-      same = False
-      print("materials not the same")
-    if not self.f_meshes == other.f_meshes:
-      same = False
-      print("f_meshes not the same")
-    if not self.meshes == other.meshes:
-      same = False
-      print("meshes not the same")
-    return same
-    
   
