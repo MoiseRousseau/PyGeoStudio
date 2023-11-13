@@ -7,7 +7,12 @@ from .BasePropertiesClass import BasePropertiesClass
 
 class Context(BasePropertiesClass):
   """
-  Context class couples analyses with the material distribution and boundary conditions
+  :param AnalysisID: ID of the analysis to apply this context. Handle automatically by PyGeoStudio. Do not change until you know what you are doing.
+  :type AnalysisID: int
+  :param GeometryUsesMaterials: Material distribution as a dictionnary such as ``{"region_name_1" : mat_id_1, "region_name_2" : mat_id_2, ...}``
+  :type GeometryUsesMaterials: dict
+  :param HydraulicBCDistribution: Distribution of the hydraulic boundary condition as a dictionnary such as ``{}``
+  :type HydraulicBCDistribution: dict
   """
   def __init__(self, data={}):
     self.data = data
@@ -20,6 +25,9 @@ class Context(BasePropertiesClass):
     return
   
   def read(self, element):
+    """
+    :meta private:
+    """
     for property_ in element:
       if property_.tag == "GeometryUsesMaterials":
         n = int(property_.attrib["Len"])

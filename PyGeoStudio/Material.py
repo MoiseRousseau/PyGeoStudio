@@ -4,18 +4,35 @@ from .BasePropertiesClass import BasePropertiesClass
 class MaterialStressStrain(BasePropertiesClass):
   """
   :param ResidualWCPercent:
+  :type ResidualWCPercent: float
   :param GeologicalStrengthIndex:
+  :type GeologicalStrengthIndex: float
   :param ResponseType:
+  :type ResponseType: str
   :param UnitWeight:
+  :type UnitWeight: float
   :param CohesionPrime:
+  :type CohesionPrime: float
   :param PhiPrime:
+  :type PhiPrime: float
   :param Rf:
+  :type Rf: float
   :param OCRatio:
+  :type OCRatio: float
   :param ConsolLambda:
+  :type ConsolLambda: float
   :param OCKappa:
+  :type OCKappa: float
   :param InitVoidRatio:
+  :type InitVoidRatio: float
   :param YieldSurfaceShape:
+  :type YieldSurfaceShape: float
   :param LimitOfAnisotropy:
+  :type LimitOfAnisotropy: float
+  :param YoungsPrimeModulus: Young modulus in SIGMA analysis
+  :type YoungsPrimeModulus: float
+  :param EffectivePoissonsRatio: Poisson ratio in SIGMA analysis
+  :type EffectivePoissonsRatio: float
   """
   def __init__(self, data):
     self.data = data
@@ -38,8 +55,18 @@ class MaterialStressStrain(BasePropertiesClass):
 
 
 class MaterialHydraulicFunction(BasePropertiesClass):
-  #Defined a hydraulic function.
-  #Note the properties are defined as an attribute in GeoStudio file, so a custom __write__ function is needed.
+  """
+  :param KSat: Saturated hydraulic conductivity of the material.
+  :type KSat: float
+  :param VolWC: Volumic water content (porosity)
+  :type VolWC: float
+  :param Beta:
+  :type Beta: float
+  :param KFnNum: Hydraulic conductivity function (for SatUnsat material). Experimental
+  :type KFnNum: int
+  :param VolWCNum: Water retention curve (for SatUnsat material). Experimental
+  :type VolWCNum: int
+  """
   def __init__(self, data):
     self.data = data
     self.parameter_type = {
@@ -67,13 +94,17 @@ class Material(BasePropertiesClass):
   :type ID: int
   :param Name: Name of the material in GeoStudio study.
   :type Name: str
-  :param SeepModel: Hydraulic model in SEEP (SatOnly or SatUnsat).
+  :param Color: RGB color (0 to 255) of the material in GeoStudio study.
+  :type Color: [int, int, int]
+  :param SeepModel: Hydraulic model in SEEP ("SatOnly" for saturated model only or "SatUnsat" for variably saturated model).
   :type SeepModel: str
   :param SlopeModel: Geomechanical model in SLOPE (MohrCoulomb, ...)
   :type SlopeModel: str
-  :param Hydraulic: Hydraulic properties of the material
+  :param StressModel: Geomechanical model in SIGMA (LinearElastric, ...)
+  :type StressModel: str
+  :param Hydraulic: Hydraulic properties of the material. This is an instance of MaterialHydraulicFunction class.
   :type Hydraulic: MaterialHydraulicFunction object
-  :param StressStrain: Geotechnical properties of the material
+  :param StressStrain: Geotechnical properties of the material. This is an instance of MaterialStressStrain class.
   :type StressStrain: MaterialStressStrain object
   """
   def __init__(self):
@@ -84,6 +115,7 @@ class Material(BasePropertiesClass):
       "Color" : list,
       "SeepModel" : str,
       "SlopeModel" : str,
+      "StressModel" : str,
       "Hydraulic" : None, #None means another XML Tree
       "StressStrain" : None,
     }

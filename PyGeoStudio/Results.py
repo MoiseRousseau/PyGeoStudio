@@ -11,18 +11,37 @@ class Results:
     return
 
   def getOutputVariables(self):
+    """
+    Return a list of the output variables in the results
+    
+    :return: the list
+    :rtype: list
+    """
     res = self.geofile.open(f"{self.analysis_name.replace('/','&3')}/{1:0>3d}/node.csv", 'r')
     header = res.readline().decode().rstrip().split(',')
     res.close()
     return header
   
   def getOutputTimes(self):
+    """
+    Return the timestep saved
+    
+    :return: The timestep
+    :rtype: list
+    """
     return list(self.time) #return a copy
     
   def getVariablesVsTime(self, variable, locations):
     #TODO: does not work
     """
     Extract the variable at the locations given against all timestep.
+    
+    :param variable: Name of variable desired (must match the name from ``getOutputVariables``)
+    :type variable: str
+    :param locations: Location at which to retrive variable value
+    :type locations: list
+    :return: Time and variable values at different location and all times
+    :rtype: numpy.array, numpy.array
     """
     #check if variable is output and get its index
     try:
@@ -47,6 +66,8 @@ class Results:
   def exportResults(self, fmt='VTK', variables=None, ):
     """
     Export the results of the analysis for post-processing with another software (e.g. Paraview)
+    
+    :meta private:
     """
     #TODO
     return

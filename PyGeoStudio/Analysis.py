@@ -61,7 +61,32 @@ class TimeIncrements(BasePropertiesClass):
 
 class Analysis(BasePropertiesClass):
   """
-  Analysis class holds the analysis properties, such as the geometry, the material distribution, the boundary conditions and the computational mesh if it is defined.
+  :param ID: Index of the analysis in GeoStudio file
+  :type ID: int
+  :param Name: Name of the analysis in GeoStudio file
+  :type Name: str
+  :param Kind: Type of analysis (SEEP or SLOPE)
+  :type Kind: str
+  :param Description: More information about the analysis
+  :type Description: str
+  :param ParentID: Index of the parent analysis in GeoStudio file
+  :type ParentID: int
+  :param Method:
+  :type Method: str
+  :param GeometryId: Index of the Geometry of the analysis in GeoStudio file. Handle automatically by PyGeoStudio. Do not change until you know what you are doing.
+  :type GeometryId: str
+  :param Geometry: Geometry of the analysis. Use the method ``setGeometry()`` below to change this property.
+  :type Geometry: Geometry object
+  :param Context: Boundary condition and material distribution coupler. Use the method ``setContext()`` below to change this property.
+  :type Context: Context object
+  :param ExcludeInitDeformation:
+  :type ExcludeInitDeformation: bool
+  :param Results: Interface to analysis results
+  :type Results: Results object
+  :param TimeIncrements: Timestepping control 
+  :type TimeIncrements: TimeIncrements object
+  :param ComputedPhysics:
+  :type ComputedPhysics: dict
   """
   def __init__(self, data):
     self.data = data
@@ -92,6 +117,9 @@ class Analysis(BasePropertiesClass):
     return res
   
   def read(self,et):
+    """
+    :meta private:
+    """
     for prop in et:
       match prop.tag:
         case "TimeIncrements":
@@ -104,18 +132,30 @@ class Analysis(BasePropertiesClass):
           self.data[prop.tag] = prop.text
   
   def setGeometry(self, geom):
+    """
+    Set a new geometry to the analysis
+    
+    :param geom: The new geometry of the analysis
+    :type geom: Geometry object
+    """
     self.data["Geometry"] = geom   # pointer toward the geometry, so we can access the geometry defined in this class
     self.data["GeometryID"] = geom.data["ID"]
     return
   
   def setContext(self, context):
     """
-    Context define the material distribution and the BC through a Context instance
+    Set a new material distribution and boundary conditions to the analysis
+    
+    :param geom: The new material distribution and boundary condition of the analysis
+    :type geom: Context object
     """
     self.context = context
     return
   
   def showProblem(self):
+    """
+    Plot the conceptual problem defined in the analysis (with material distribution)
+    """
     fig,ax = self.data["Geometry"].draw(show=False)
     cmap = plt.get_cmap('tab20', np.max(list(self.data["Context"]["GeometryUsesMaterials"].values())))
     for reg, mat_id in self.data["Context"]["GeometryUsesMaterials"].items():
@@ -124,34 +164,4 @@ class Analysis(BasePropertiesClass):
       Y_pts = [self["Geometry"]["Points"][x-1,1] for x in pts]
       ax.fill(X_pts, Y_pts,color=cmap(mat_id-1))
     plt.show()
-    return
-  
-  def __initiate__(self):
-    if self.initialized: return
-    self.initialized = True
-    #convert input to the right type
-    #parse xml file to get analysis information
-    xml = ET.parse(self.geofile.open(self.Name.replace('/','&3')+'/'+self.geofile.filename[:-3]+'xml'))
-    root = xml.getroot()
-    this_analysis = root[1][self.Index_in_xml]
-    found = False
-    for property_ in this_analysis:
-      if property_.tag == "TimeIncrements": 
-        found = True
-        break
-    if found:
-      found = False
-      for elem in property_:
-        if elem.tag == "TimeSteps": 
-          found = True
-          break
-    if found:
-      self.n_timestep = int(elem.attrib["Len"])
-      self.timesteps = np.zeros(self.n_timestep,dtype='f8')
-      self.saved_timesteps = np.zeros(self.n_timestep,dtype='bool')
-      for i,timestep in enumerate(elem):
-        if "ElapsedTime" in timestep.attrib.keys():
-          self.timesteps[i] = timestep.attrib["ElapsedTime"]
-        if "Save" in timestep.attrib.keys(): 
-          self.saved_timesteps[i] = True
     return

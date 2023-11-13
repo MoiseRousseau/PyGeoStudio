@@ -6,11 +6,10 @@ import warnings
 
 
 class Mesh:
+  #TODO: with MeshIO
   """
-  Interface to the PLY mesh stored in the GeoStudio analysis
-  
-  :param [src_mesh]: Path to the mesh file in the GeoStudio archive
-  :type [src_mesh]: src
+  :param src_mesh: Path to mesh in PLY format
+  :type src_mesh: src
   """
   def __init__(self, src_mesh):
     self.mesh = plyfile.PlyData.read(src_mesh)
@@ -32,8 +31,8 @@ class Mesh:
     """
     Return point index closest to the location given.
     
-    :param [location]: [X,Y,Z] coordinate of the location
-    :type [location]: Iterable
+    :param location: [X,Y,Z] coordinate of the location
+    :type location: Iterable
     :return: Index of the point in the mesh (0 based)
     :rtype: int
     """
@@ -51,9 +50,14 @@ class Mesh:
       warnings.warn(f"Warning, point {[X,Y,Z]} located at a relatively high distance from a mesh point: {np.sqrt(distance):.6e} / Domain bounding box diagonal {np.sqrt(domain_diag):.6e}", UserWarning)
     return champion
   
-  def exportMesh(self, fmt):
+  def exportMesh(self, path):
     """
-    Export the current mesh in the format provided for processing with another tools
+    Save the current mesh in the file designed by path. Deduce format from extention.
+    Not implemented yet.
+    
+    :meta private:
+    :param path: Path to the output mesh file
+    :type path: str
     """
     return
 

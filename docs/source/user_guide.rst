@@ -67,4 +67,8 @@ Classes description
    
    classes/geostudiofile.rst
    classes/material.rst
-
+   classes/analysis.rst
+   classes/context.rst
+   classes/mesh.rst
+   classes/reinforcement.rst
+   classes/results.rst
