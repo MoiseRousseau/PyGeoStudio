@@ -11,6 +11,7 @@ class Geometry:
     self.lines = None
     self.mesh_id = None
     self.mesh = None
+    self.name = None
     self.regions = {}
     self.other_elem = []
     return
@@ -20,8 +21,9 @@ class Geometry:
       case "Points": return self.points
       case "Lines": return self.lines
       case "Regions": return self.regions
-      case "MeshId": return self.mesh_id
+      case "MeshId": return int(self.mesh_id)
       case "Mesh": return self.mesh
+      case "Name": return self.name
     return
   
   def draw(self, show=True):
@@ -62,6 +64,10 @@ class Geometry:
         self.mesh_id = property_.text
       elif property_.tag == "ResultGraphs":
         pass #do not parse result graphics
+      elif property_.tag == "Name":
+        self.name = property_.text
+      #elif property_.tag == "MeshDefaultEdgeLength":
+      #  pass
       else:
         self.other_elem.append(property_)
     return
@@ -128,6 +134,9 @@ class Geometry:
     #mesh id
     sub = ET.SubElement(et, "MeshId")
     sub.text = self.mesh_id
+    #name
+    sub = ET.SubElement(et, "Name")
+    sub.text = self.name
     #others
     for prop in self.other_elem:
       et.append(prop)

@@ -14,12 +14,12 @@ class BasePropertiesClass:
 
   In parameter_type, if the value is dict, it is written as a attrib
   """
-  data = {}
-  parameter_type = {} #data from the GeoStudio file
+  parameter_type = {}
   my_data = []
-
-  def __init__(self, data):
-    self.data = data
+  def __init__(self, prop):
+    self.data = {}
+    self.other_elem = []
+    self.read(prop)
     return
 
   def __str__(self):
@@ -50,25 +50,49 @@ class BasePropertiesClass:
     if property_ in self.data.keys(): #return to the user
       if property_ in self.parameter_type.keys(): # already seen and handled but PyGeoStudio
         func = self.parameter_type[property_]
-        if func is None:
-          return self.data[property_]
-        else:
+        if func in [dict, int, str, list, float, bool]: #Convert to standard Python object
           return func(self.data[property_])
+        else: #returned the PyGeoStudio object
+          return self.data[property_]
       else: #not handled
-        warnings.warn(f"Property {parameter} defined but not officially handled by PyGeoStudio.\nReturn property non-interpreted as a string. Please contact for assistance.", UserWarning)
+        warnings.warn(f"Property {property_} defined but not officially handled by PyGeoStudio.\nReturn property non-interpreted as a string. Please contact for assistance.", UserWarning)
         return self.data[property_]
     elif property_ in self.parameter_type.keys(): #not defined in the analysis but PyGeoStudio knows it
       return None
+    elif property_ in [x.tag for x in self.other_elem]:
+      warnings.warn(f"Property named \"{property_}\" defined, but it has a complex structure not yet handled by PyGeoStudio. Return it as a raw XML tree. Good luck or please contact for assistance.")
+      for x in self.other_elem:
+        if x.tag == property_: return x
     else: #totally unknown
       raise ValueError(f"Property named \"{property_}\" not defined in the file, neither handled by PyGeoStudio. If you feel this is an error, please contact for assistance.")
 
   def read(self, et):
     """
-    Read the XML element tree and populate the class
+    Read the XML element tree and populate the class. The rules:
+    1. If the property is Missing, skip it
+    2. If the property is a subtree not known / handled by PyGeoStudio, store it as is
+    3. If the property is interpreted as a dict, take the attribute
+    4. If a custom class stores the property, call the constructor
+    5. Parse property as a string
     """
     for prop in et:
-      if prop.text is None and prop.attrib.get("Missing") == "true": continue
-      self.data[prop.tag] = prop.text
+      prop_type = self.parameter_type.get(prop.tag)
+      # 1
+      if prop.attrib.get("Missing") == "true": 
+        continue
+      # 2
+      elif len(prop) > 0 and prop_type is None: 
+        self.other_elem.append(prop)
+      # 3
+      elif prop_type is dict: 
+        self.data[prop.tag] = prop.attrib
+      # 4
+      elif prop_type not in [int, str, float, list, bool] : 
+        self.data[prop.tag] = self.parameter_type[prop.tag](prop)
+      elif len(prop) == 0:
+        self.data[prop.tag] = prop.text
+      else:
+        raise ValueError("You are not supposed to be here...")
     return
 
   def __write__(self, et):
@@ -77,7 +101,7 @@ class BasePropertiesClass:
     """
     for tag,val in self.data.items():
       if tag in self.my_data: continue #skip property defined in this lib
-      if self.parameter_type.get(tag, 1) is None:
+      if self.parameter_type[tag] not in [int, dict, str, float, list, bool]:
         sub = ET.SubElement(et, tag)
         val.__write__(sub)
         continue
@@ -88,6 +112,8 @@ class BasePropertiesClass:
       if not isinstance(val, str):
         raise ValueError(f"Can't write property {tag} because value is not a string: {val}")
       sub.text = val
+    for prop in self.other_elem:
+      et.append(prop)
     return
 
   def getAllProperties(self):

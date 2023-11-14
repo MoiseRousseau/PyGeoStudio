@@ -14,16 +14,13 @@ class Context(BasePropertiesClass):
   :param HydraulicBCDistribution: Distribution of the hydraulic boundary condition as a dictionnary such as ``{}``
   :type HydraulicBCDistribution: dict
   """
-  def __init__(self, data={}):
-    self.data = data
-    self.parameter_type = {
-      "AnalysisID" : int,
-      "GeometryUsesMaterials" : dict,
-      "HydraulicBCDistribution" : dict,
-    }
-    self.my_data = []
-    return
-  
+  parameter_type = {
+    "AnalysisID" : int,
+    "GeometryUsesMaterials" : dict,
+    "HydraulicBCDistribution" : dict,
+  }
+  my_data = []
+
   def read(self, element):
     """
     :meta private:
@@ -50,7 +47,7 @@ class Context(BasePropertiesClass):
       else:
         self.data[property_.tag] = property_.text
     return
-  
+
   def __write__(self, et):
     #analysis ID
     for tag,val in self.data.items():

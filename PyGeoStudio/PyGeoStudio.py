@@ -3,10 +3,12 @@ import os, sys
 import numpy as np
 import xml.etree.ElementTree as ET
 import datetime
+import warnings
 from prettytable import PrettyTable
+from bs4 import BeautifulSoup
 
-from .Analysis import Analysis 
-from .Geometry import Geometry 
+from .Analysis import Analysis
+from .Geometry import Geometry
 from .Context import Context
 from .Material import Material
 from .Reinforcement import Reinforcement
@@ -24,7 +26,6 @@ class GeoStudioFile:
     self.f_src = geostudio_file
     self.src = None
     self.open_mode = mode
-    
     self.geometries = []
     self.meshes = []
     self.analyses = []
@@ -34,16 +35,16 @@ class GeoStudioFile:
     self.xml_items = []
     self.initialize()
     return
-  
+
   def __getitem__(self, item):
     match item:
       case "Analyses": return self.analyses
       case "Materials": return self.materials
       case "Reinforcements": return self.reinforcements
       case "Functions": return self.mesh_id
-      case _: 
+      case _:
         raise ValueError(f"No accessible item of name {item} through PyGeoStudio interface")
-  
+
   def initialize(self):
     """
     :meta private:
@@ -81,12 +82,17 @@ class GeoStudioFile:
       else:
         #store the item for the write method
         self.xml_items.append(element)
-    
+
     #Create analysis structure, i.e. define Geometry, Mesh, Context and Results
     for analysis in self.analyses:
       geom = self.getGeometryByID(analysis["GeometryId"])
-      f_mesh = analysis["Name"].replace('/','&3')+"/Mesh.ply"
-      geom.mesh = Mesh(self.src.open(f_mesh))
+      meshid_geom = geom["MeshId"]
+      f_mesh = f"mesh_{meshid_geom}.ply"#analysis["Name"].replace('/','&3')
+      try:
+        geom.mesh = Mesh(self.src.open(f_mesh))
+      except:
+        print(f_mesh)
+        warnings.warn(f"No mesh defined for Geometry Name \"{geom['Name']}\"")
       analysis["Geometry"] = geom
       analysis["Results"] = Results(
         self.src,
@@ -98,7 +104,7 @@ class GeoStudioFile:
       analysis = self.getAnalysisByID(context["AnalysisID"])
       analysis["Context"] = context
     return
-    
+
   def __readGeometry__(self,element):
     self.n_geometry = int(element.attrib["Len"])
     for i in range(self.n_geometry):
@@ -106,32 +112,28 @@ class GeoStudioFile:
       new_geom.read(element[i])
       self.geometries.append(new_geom)
     return
-  
+
   def __readAnalysis__(self,element):
     self.n_analysis = int(element.attrib["Len"])
     for i in range(self.n_analysis):
-      new_analysis = Analysis({})#{x.tag:x.text for x in element[i]})
-      new_analysis.read(element[i])
+      new_analysis = Analysis(element[i])
       self.analyses.append(new_analysis)
     return
-  
+
   def __readContexts__(self, element):
     n_contexts = int(element.attrib["Len"])
     for i in range(n_contexts):
-      new_context = Context({})
-      new_context.read(element[i])
+      new_context = Context(element[i])
       self.contexts.append(new_context)
     return
-  
+
   def __readMaterials__(self, element):
     self.n_materials = int(element.attrib["Len"])
     for i in range(self.n_materials):
-      mat_ = element[i]
-      new_mat = Material()
-      new_mat.read(mat_)
+      new_mat = Material(element[i])
       self.materials.append(new_mat)
     return
-      
+
   def __readReinforcements__(self, element):
     self.n_reinforcements = int(element.attrib["Len"])
     for i in range(self.n_reinforcements):
@@ -139,8 +141,8 @@ class GeoStudioFile:
       new_reinf = Reinforcement({x.tag:x.text for x in reinf_})
       self.reinforcements.append(new_reinf)
     return
-    
-  
+
+
   def showAnalysisTree(self):
     """
     Print the analysis tree in the GeoStudio file with analysis ID, name and parent ID if defined.
@@ -153,7 +155,7 @@ class GeoStudioFile:
       res.add_row([analysis['ID'],analysis['Name'],analysis['ParentID']])
     print(res)
     return
-  
+
   def getAnalysisByName(self, name):
     """
     Return the analysis in the analysis tree corresponding to the name given.
@@ -165,10 +167,10 @@ class GeoStudioFile:
     :rtype: Analysis object
     """
     for analysis in self.analyses:
-      if analysis["Name"] == name: 
+      if analysis["Name"] == name:
         return analysis
     raise ValueError(f"Analysis {name} not found in file.")
-  
+
   def getAnalysisByID(self, ID):
     """
     Return the analysis in the analysis tree corresponding to the ID given.
@@ -177,10 +179,10 @@ class GeoStudioFile:
     :type ID: int
     """
     for analysis in self.analyses:
-      if analysis["ID"] == ID: 
+      if analysis["ID"] == ID:
         return analysis
     raise ValueError(f"Analysis ID {ID} not found in file.")
-  
+
   def getGeometryByID(self, ID):
     """
     Return the geometry corresponding to the ID given.
@@ -210,7 +212,7 @@ class GeoStudioFile:
         res.add_row([mat['ID'],mat['Name'],mat['SeepModel'],mat['SlopeModel']])
       print(res)
     return
-  
+
   def getMaterialByName(self, name):
     """
     Return the material corresponding to the name given.
@@ -222,7 +224,7 @@ class GeoStudioFile:
       if mat["Name"] == name:
         return mat
     raise ValueError(f"Material {name} not found in file.")
-  
+
   def getMaterialByID(self, ID):
     """
     Return the material corresponding to the ID given.
@@ -277,10 +279,10 @@ class GeoStudioFile:
       if x["ID"] == ID:
         return x
     raise ValueError(f"Reinforcements ID {ID} not found in file.")
-  
-  def writeConfigurationFile(self, f_out, prettify=True):
+
+  def genConfigurationFile(self):
     """
-    Write the main xml file
+    Generate the main xml file and return it as a string
     
     :meta private:
     """
@@ -330,21 +332,20 @@ class GeoStudioFile:
       else:
         #store the item for the write method
         out_root.append(element)
-    tree = ET.ElementTree(out_root)
-    tree.write(f_out, encoding='utf-8', xml_declaration=True, method="xml") 
-    if prettify:
-      self.__prettifyer__(f_out)
-    return
-  
-  def writeGeoStudioFile(self, f_out, compresslevel=1):
+    tree_string = ET.tostring(out_root, encoding="UTF-8", xml_declaration=True, method="xml")
+    #tree_string = BeautifulSoup(tree_string, 'xml').prettify()
+    return tree_string
+
+  def writeGeoStudioFile(self, f_out, compresslevel=3):
     """
     Write the (modified) study under a new file
     
     :param f_out: Name of the output file
     :type f_out: str
-    :param compresslevel: Level of compression of the output file from 0 (uncompressed) to 9 (fully compressed) (optional, default=1) 
+    :param compresslevel: Level of compression of the output file from 0 (uncompressed) to 9 (fully compressed) (optional, default=1)
     :type compresslevel: int
     """
+    # Create the archive
     ext = f_out.split('.')[-1]
     if ext != "gsz":
       f_out += ".gsz"
@@ -353,12 +354,14 @@ class GeoStudioFile:
       raise ValueError("Cannot overwriting the source GeoStudio file. Please write within another file.")
     else:
       zip_out = zipfile.ZipFile(
-        f_out, mode="w", 
-        compression=zipfile.ZIP_DEFLATED, 
+        f_out, mode="w",
+        compression=zipfile.ZIP_DEFLATED,
         compresslevel=compresslevel
       )
-    with zip_out.open(prefix + ".xml", "w") as xml_out:
-      self.writeConfigurationFile(xml_out, prettify=False)
+    # Write main conf file
+    main_xml_str = self.genConfigurationFile()
+    zip_out.writestr(prefix + ".xml", data=main_xml_str)
+    # Write meshes
     mesh_set = set()
     for geom in self.geometries:
       mesh_set.add(geom.mesh_id)
@@ -368,15 +371,5 @@ class GeoStudioFile:
       zip_out.writestr(mesh_name, data=self.src.read(mesh_name))
     zip_out.close()
     print(f"GeoStudio study successfully written in {f_out}")
-    return
-  
-  def __prettifyer__(self, f_out):
-    from bs4 import BeautifulSoup
-    with open(f_out, 'r') as src:
-      data = '\n'.join(src.readlines())
-    bs = BeautifulSoup(data, 'xml')
-    data = bs.prettify()
-    with open(f_out, 'w') as out:
-      out.write(data)
     return
   

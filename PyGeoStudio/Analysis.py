@@ -13,16 +13,13 @@ class TimeIncrements(BasePropertiesClass):
   """
   TimeIncrement holds the time for which the simulation results must be saved
   """
-  def __init__(self, data):
-    self.data = data
-    self.parameter_type = {
-      "Duration" : float, #total duration of the simulation
-      "IncrementOption" : str, #Exponential
-      "IncrementCount" : int,
-      "InitialIncrementSize" : float,
-      "TimeSteps" : list,
-    }
-    return
+  parameter_type = {
+    "Duration" : float, #total duration of the simulation
+    "IncrementOption" : str, #Exponential
+    "IncrementCount" : int,
+    "InitialIncrementSize" : float,
+    "TimeSteps" : list,
+  }
   
   def read(self, et):
     """
@@ -88,48 +85,29 @@ class Analysis(BasePropertiesClass):
   :param ComputedPhysics:
   :type ComputedPhysics: dict
   """
-  def __init__(self, data):
-    self.data = data
-    self.parameter_type = {
-      "ID" : int,
-      "Name" : str,
-      "Kind" : str,
-      "Description": str,
-      "ParentID" : int,
-      "Method" : str,
-      "GeometryId" : int,
-      "Geometry" : None,
-      "Context" : None,
-      "ExcludeInitDeformation" : bool,
-      "Results": None,
-      "TimeIncrements" : None,
-      "ComputedPhysics" : dict,
-       #TODO below
+  parameter_type = {
+    "ID" : int,
+    "Name" : str,
+    "Kind" : str,
+    "Description": str,
+    "ParentID" : int,
+    "Method" : str,
+    "GeometryId" : int,
+    "Geometry" : None,
+    "Context" : None,
+    "ExcludeInitDeformation" : bool,
+    "Results": None,
+    "TimeIncrements" : TimeIncrements,
+    "ComputedPhysics" : dict,
 #      "ConvergenceCriteria" : None,
 #      "IterationControls" : None,
 #      "UnderRelaxationCriteria" : None,
-    }
-    self.my_data = ["Geometry", "Context", "Results"]
-    return
+  }
+  my_data = ["Geometry", "Context", "Results"]
   
   def __repr__(self):
     res = f"<PyGeoStudio.Analysis object, (ID: {self.data['ID']}, Name: \"{self.data['Name']}\")>"
     return res
-  
-  def read(self,et):
-    """
-    :meta private:
-    """
-    for prop in et:
-      match prop.tag:
-        case "TimeIncrements":
-          timeinc = TimeIncrements({})
-          timeinc.read(prop)
-          self.data["TimeIncrements"] = timeinc
-        case "ComputedPhysics":
-          self.data["ComputedPhysics"] = prop.attrib
-        case _:
-          self.data[prop.tag] = prop.text
   
   def setGeometry(self, geom):
     """
