@@ -51,6 +51,7 @@ class Mesh:
     Convert Mesh data into MeshIO format points and cells: 
     
     .. code-block:: python
+    
         points, cells = mesh_study.getMeshIOData()
         meshio_object = MeshIO.Mesh(points=points, cells=cells)
     
