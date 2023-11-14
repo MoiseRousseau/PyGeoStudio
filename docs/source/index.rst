@@ -46,8 +46,8 @@ Features
      - TODO
    * - Access analysis results
      - SEEP only (experimental)
-   * - Export result to Paraview (more advanced post-processing)
-     - TODO
+   * - Export results to Paraview (VTU format)
+     - OK
    * - Access meshes
      - Partial (experimental)
    * - Import meshes

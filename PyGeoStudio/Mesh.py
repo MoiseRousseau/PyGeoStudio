@@ -6,14 +6,10 @@ import warnings
 
 
 class Mesh:
-  #TODO: with MeshIO
-  """
-  :param src_mesh: Path to mesh in PLY format
-  :type src_mesh: src
-  """
   def __init__(self, src_mesh):
     self.mesh = plyfile.PlyData.read(src_mesh)
-    self.vertices = self.mesh.elements[1].data
+    self.vertices = self.mesh['node']
+    self.elements = self.mesh['element']['id']
     return
   
   def getMeshBoundingBox(self):
@@ -50,14 +46,46 @@ class Mesh:
       warnings.warn(f"Warning, point {[X,Y,Z]} located at a relatively high distance from a mesh point: {np.sqrt(distance):.6e} / Domain bounding box diagonal {np.sqrt(domain_diag):.6e}", UserWarning)
     return champion
   
-  def exportMesh(self, path):
+  def asMeshIOData(self):
     """
-    Save the current mesh in the file designed by path. Deduce format from extention.
-    Not implemented yet.
+    Convert Mesh data into MeshIO format points and cells: 
     
-    :meta private:
+    .. code-block:: python
+        points, cells = mesh_study.getMeshIOData()
+        meshio_object = MeshIO.Mesh(points=points, cells=cells)
+    
+    :return: Points and Cells in MeshIO suitable format.
+    :rtype: numpy array, list
+    """
+    x = self.vertices['x']
+    y = self.vertices['y']
+    z = self.vertices['z']
+    points = np.array([x,y,z]).transpose()
+    cells = [
+      ("triangle", [x-1 for x in self.elements if len(x) == 3]),
+      ("quad", [x-1 for x in self.elements if len(x) == 4])
+    ]
+    return points, cells
+  
+  def export(self, path, point_data=None):
+    """
+    Export the current mesh and point data provided. Export are carried with MeshIO.
+    
     :param path: Path to the output mesh file
     :type path: str
+    :param point_data: Point data to write with the mesh (default = No data). Supplied as a dictionary with point dataset name as the key and value a iterable whose size match the number of point in the mesh.
+    :type point_data: dict
     """
+    try:
+      import meshio
+    except:
+      raise RuntimeError("Please install MeshIO to use this capability")
+    points, cells = self.asMeshIOData()
+    mesh = meshio.Mesh(
+      points,
+      cells,
+      point_data=point_data,
+    )
+    mesh.write(path)
     return
 
