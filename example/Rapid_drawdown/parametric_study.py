@@ -18,10 +18,10 @@ if __name__ == "__main__":
   
   for Ksat in Ksats:
     # change hydraulic conductivity
-    mat["Hydraulic"]["KSat"] = Ksats
+    mat["Hydraulic"]["KSat"] = Ksat
     # run GeoStudio
     geofile.save()
-    pgs.run(geofile)
+    pgs.run(geofile, analyses_to_solve=["2 - Instantaneous drawdown"])
     # get results
     instant_drawdown = geofile.getAnalysisByName("2 - Instantaneous drawdown")
     T,PWP = instant_drawdown["Results"].getVariablesVsTime("PoreWaterPressure", locations=[[25,2]])
