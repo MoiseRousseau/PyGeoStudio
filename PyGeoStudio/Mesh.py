@@ -6,7 +6,8 @@ import warnings
 
 
 class Mesh:
-  def __init__(self, src_mesh):
+  def __init__(self, mesh_id, src_mesh):
+    self.mesh_id = mesh_id
     self.mesh = plyfile.PlyData.read(src_mesh)
     self.vertices = self.mesh['node']
     self.elements = self.mesh['element']['id']
@@ -67,10 +68,21 @@ class Mesh:
       ("quad", [x-1 for x in self.elements if len(x) == 4])
     ]
     return points, cells
+
+  def write(self, path):
+    """
+    Extract and save the mesh in GeoStudio native format with extention ``.ply``
+    
+    :param path: Path to the output mesh file
+    :type path: str
+    """
+    self.mesh.write(path)
+    self.mesh.write("test.ply")
+    return
   
   def export(self, path, point_data=None):
     """
-    Export the current mesh and point data provided. Export are carried with MeshIO.
+    Export the current mesh with point data provided in another format. Export are carried with MeshIO.
     
     :param path: Path to the output mesh file
     :type path: str

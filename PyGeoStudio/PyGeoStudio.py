@@ -6,6 +6,7 @@ import datetime
 import warnings
 from prettytable import PrettyTable
 from bs4 import BeautifulSoup
+import io
 
 from .Analysis import Analysis
 from .Geometry import Geometry
@@ -22,10 +23,8 @@ class GeoStudioFile:
   :param geostudio_file: Path to the GeoStudio file
   :type geostudio_file: str
   """
-  def __init__(self, geostudio_file, mode='r'):
+  def __init__(self, geostudio_file):
     self.f_src = geostudio_file
-    self.src = None
-    self.open_mode = mode
     self.geometries = []
     self.meshes = []
     self.analyses = []
@@ -51,12 +50,12 @@ class GeoStudioFile:
     """
     #open file
     if os.path.isfile(self.f_src):
-      self.src = zipfile.ZipFile(self.f_src, self.open_mode)
+      src = zipfile.ZipFile(self.f_src, 'r')
     else:
       raise IOError(f"File {self.f_src} doesn't exist in the current directory")
     #parse geoslope input
     prefix = self.f_src.split('/')[-1][:-4]
-    self.main_xml = ET.parse(self.src.open(prefix+'.xml'))
+    self.main_xml = ET.parse(src.open(prefix+'.xml'))
     root = self.main_xml.getroot()
     for element in root:
       #print(element.tag)
@@ -83,19 +82,23 @@ class GeoStudioFile:
         #store the item for the write method
         self.xml_items.append(element)
 
-    #Create analysis structure, i.e. define Geometry, Mesh, Context and Results
+    # Parse meshes used in the study
+    for geom in self.geometries:
+      meshid_geom = geom["MeshId"]
+      f_mesh = f"mesh_{meshid_geom}.ply"
+      try:
+        mesh_obj = Mesh(meshid_geom, src.open(f_mesh))
+      except:
+        warnings.warn(f"Unable to find mesh defined for Geometry Name \"{geom['Name']}\" under {f_mesh}")
+      self.meshes.append(mesh_obj)
+      geom.mesh = mesh_obj
+
+    # Create analysis structure, i.e. define Geometry, Mesh, Context and Results
     for analysis in self.analyses:
       geom = self.getGeometryByID(analysis["GeometryId"])
-      meshid_geom = geom["MeshId"]
-      f_mesh = f"mesh_{meshid_geom}.ply"#analysis["Name"].replace('/','&3')
-      try:
-        geom.mesh = Mesh(self.src.open(f_mesh))
-      except:
-        print(f_mesh)
-        warnings.warn(f"No mesh defined for Geometry Name \"{geom['Name']}\"")
       analysis["Geometry"] = geom
       analysis["Results"] = Results(
-        self.src,
+        self.f_src,
         analysis["Name"],
         time=tuple(float(x["ElapsedTime"]) for x in analysis["TimeIncrements"]["TimeSteps"]) if analysis["Method"] == "Transient" else [-1],
         mesh=geom.mesh,
@@ -103,6 +106,9 @@ class GeoStudioFile:
     for context in self.contexts:
       analysis = self.getAnalysisByID(context["AnalysisID"])
       analysis["Context"] = context
+
+    src.close()
+
     return
 
   def __readGeometry__(self,element):
@@ -336,39 +342,47 @@ class GeoStudioFile:
     #tree_string = BeautifulSoup(tree_string, 'xml').prettify()
     return tree_string
 
-  def writeGeoStudioFile(self, f_out, compresslevel=3):
+  def save(self):
     """
-    Write the (modified) study under a new file
+    Save the modification made by PyGeoStudio to the current GeoStudio file.
+    """
+    prefix = self.f_src.split('/')[-1][:-4]
+    # Write main conf file
+    zip_out = zipfile.ZipFile(self.f_src, 'a')
+    main_xml_str = self.genConfigurationFile()
+    zip_out.writestr(prefix + ".xml", data=main_xml_str)
+    # TODO: write meshes when we can modify it!
+    return
+
+  def saveAs(self, f_out=None, compresslevel=3):
+    """
+    Write the (modified) study under a new file. Note the results are not copied to the new study.
     
-    :param f_out: Name of the output file
+    :param f_out: Name of the new file (must be different than the input)
     :type f_out: str
     :param compresslevel: Level of compression of the output file from 0 (uncompressed) to 9 (fully compressed) (optional, default=1)
     :type compresslevel: int
     """
-    # Create the archive
+    if f_out == self.f_src:
+      raise ValueError("The new file has the same name than the input file. Please write within another file or use the save() method")
     ext = f_out.split('.')[-1]
     if ext != "gsz":
       f_out += ".gsz"
     prefix = f_out.split('/')[-1][:-4]
-    if f_out == self.f_src:
-      raise ValueError("Cannot overwriting the source GeoStudio file. Please write within another file.")
-    else:
-      zip_out = zipfile.ZipFile(
-        f_out, mode="w",
-        compression=zipfile.ZIP_DEFLATED,
-        compresslevel=compresslevel
-      )
+    zip_out = zipfile.ZipFile(
+      f_out, mode="w",
+      compression=zipfile.ZIP_DEFLATED,
+      compresslevel=compresslevel
+    )
     # Write main conf file
     main_xml_str = self.genConfigurationFile()
     zip_out.writestr(prefix + ".xml", data=main_xml_str)
     # Write meshes
-    mesh_set = set()
-    for geom in self.geometries:
-      mesh_set.add(geom.mesh_id)
-    for mesh_id in mesh_set:
-      if mesh_id is None: continue
-      mesh_name = "mesh_" + mesh_id + ".ply"
-      zip_out.writestr(mesh_name, data=self.src.read(mesh_name))
+    for mesh in self.meshes:
+      byte_str = io.BytesIO()
+      mesh.write(byte_str)
+      mesh_name = "mesh_" + str(mesh.mesh_id) + ".ply"
+      zip_out.writestr(mesh_name, data=byte_str.getvalue())
     zip_out.close()
     print(f"GeoStudio study successfully written in {f_out}")
     return

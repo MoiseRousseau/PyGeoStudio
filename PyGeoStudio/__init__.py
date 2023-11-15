@@ -6,3 +6,4 @@ from .Material import Material
 from .Reinforcement import Reinforcement
 from .Mesh import Mesh
 from .Results import Results
+from .utils import *

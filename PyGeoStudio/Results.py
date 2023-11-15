@@ -1,10 +1,11 @@
 import numpy as np
+import zipfile
 
 from .BasePropertiesClass import BasePropertiesClass
 
 class Results:
-  def __init__(self, geofile, analysis_name, time, mesh=None):
-    self.geofile = geofile
+  def __init__(self, f_src, analysis_name, time, mesh=None):
+    self.f_src = f_src
     self.analysis_name = analysis_name
     self.time = time
     self.mesh = mesh
@@ -17,9 +18,11 @@ class Results:
     :return: the list
     :rtype: list
     """
-    res = self.geofile.open(f"{self.analysis_name.replace('/','&3')}/{1:0>3d}/node.csv", 'r')
+    src = zipfile.ZipFile(self.f_src)
+    res = src.open(f"{self.analysis_name.replace('/','&3')}/{1:0>3d}/node.csv", 'r')
     header = res.readline().decode().rstrip().split(',')
     res.close()
+    src.close()
     return header
   
   def getOutputTimes(self):
@@ -46,10 +49,12 @@ class Results:
       variable_index = self.getOutputVariables().index(variable)
     except:
       raise ValueError(f"Output variables \"{variable}\" not found in file. Available output variables are: {self.getOutputVariables()}")
+    src = zipfile.ZipFile(self.f_src)
     t_index = self.time.index(time)
-    print(f"{self.analysis_name.replace('/','&3')}/{t_index:0>3d}/node.csv")
-    f = self.geofile.open(f"{self.analysis_name.replace('/','&3')}/{t_index:0>3d}/node.csv")
+    f = src.open(f"{self.analysis_name.replace('/','&3')}/{t_index:0>3d}/node.csv")
     data = np.genfromtxt(f, delimiter=',', skip_header=1)[:,variable_index] #remove point id
+    f.close()
+    src.close()
     return data
     
   def getVariablesVsTime(self, variable, locations):
@@ -68,6 +73,7 @@ class Results:
       variable_index = self.getOutputVariables().index(variable)
     except:
       raise ValueError(f"Output variables \"{variable}\" not found in file. Available output variables are: {self.getOutputVariables()}")
+    src = zipfile.ZipFile(self.f_src)
     champions = [0 for i in range(len(locations))]
     for i,location in enumerate(locations):
       champions[i] = self.mesh.getPointIndexInMesh(location)
@@ -75,12 +81,13 @@ class Results:
     temp = np.zeros(len(locations), dtype='f8')
     for i in range(len(self.time)):
       temp[:] = np.nan
-      f = self.geofile.open(f"{self.analysis_name.replace('/','&3')}/{i:0>3d}/node.csv")
+      f = src.open(f"{self.analysis_name.replace('/','&3')}/{i:0>3d}/node.csv")
       data = np.genfromtxt(f, delimiter=',', skip_header=1)
       index_in_results = [int(np.argwhere(data[:,0] == x)) for x in champions]
       datas[i] = data[index_in_results,variable_index]
       f.close()
     final_datas = np.array(datas)
+    src.close()
     return np.zeros_like(final_datas) + np.array(self.time)[:,None], final_datas
   
   def exportAllResultsVTU(self, path):
