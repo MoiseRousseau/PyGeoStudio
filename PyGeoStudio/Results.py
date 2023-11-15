@@ -93,7 +93,7 @@ class Results:
     if len(locations) == 1:
       X = X.squeeze()
       Y = Y.squeeze()
-    return X,Y 
+    return X,Y
   
   def exportAllResultsVTU(self, path):
     """
