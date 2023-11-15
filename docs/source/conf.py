@@ -19,7 +19,7 @@ release = '0.2.0'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = ['sphinx.ext.autodoc']
-autodoc_mock_imports = ['numpy','zipfile','plyfile','prettytable','matplotlib']
+autodoc_mock_imports = ['numpy','zipfile','plyfile','prettytable','matplotlib','bs4']
 
 templates_path = ['_templates']
 exclude_patterns = []
