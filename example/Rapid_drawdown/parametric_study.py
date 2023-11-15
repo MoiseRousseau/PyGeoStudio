@@ -4,10 +4,11 @@ path = os.getcwd() + '/../../'
 sys.path.append(path)
 
 import PyGeoStudio as pgs
+import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
 
-  src_file = "temp.gsz" 
+  src_file = "Rapid drawdown.gsz" 
   geofile = pgs.GeoStudioFile(src_file)
   mat = geofile.getMaterialByName("Dam fill")
   
@@ -29,10 +30,8 @@ if __name__ == "__main__":
     PWPs.append(PWP)
   
   fig,ax = plt.subplots()
-  ax.plot(
-    Ts, PWPs,
-    label=[str(x) for x in Ksats]
-  )
+  for T,PWP,Ksat in zip(Ts,PWPs,Ksats):
+    ax.plot(T, PWP, label=f"Ksat = {Ksat}")
   ax.grid()
   ax.legend()
   ax.set_ylabel("PoreWaterPressure")

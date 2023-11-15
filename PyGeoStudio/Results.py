@@ -88,7 +88,12 @@ class Results:
       f.close()
     final_datas = np.array(datas)
     src.close()
-    return np.zeros_like(final_datas) + np.array(self.time)[:,None], final_datas
+    X = np.zeros_like(final_datas) + np.array(self.time)[:,None]
+    Y = final_datas
+    if len(locations) == 1:
+      X = X.squeeze()
+      Y = Y.squeeze()
+    return X,Y 
   
   def exportAllResultsVTU(self, path):
     """
