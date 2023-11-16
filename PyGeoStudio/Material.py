@@ -1,5 +1,7 @@
 import xml.etree.ElementTree as ET
 from .BasePropertiesClass import BasePropertiesClass
+from .Function import Function
+from .Color import Color
 
 class MaterialStressStrain(BasePropertiesClass):
   """
@@ -78,8 +80,8 @@ class MaterialHydraulicFunction(BasePropertiesClass):
     "VolWC":float, #Saturated volumic Water Content (porosity)
     "Beta":float,
     # If non-sat
-    "KFnNum":int, #Relative permeability function
-    "VolWCNum":int, #Water Retention Curve
+    "KFnNum":Function, #Relative permeability function
+    "VolWCFnNum":Function, #Water Retention Curve
   }
 
   def read(self, et):
@@ -101,7 +103,7 @@ class Material(BasePropertiesClass):
   :param Name: Name of the material in GeoStudio study.
   :type Name: str
   :param Color: RGB color (0 to 255) of the material in GeoStudio study.
-  :type Color: [int, int, int]
+  :type Color: PyGeoStudio.Color
   :param SeepModel: Hydraulic model in SEEP ("SatOnly" for saturated model only or "SatUnsat" for variably saturated model).
   :type SeepModel: str
   :param SlopeModel: Geomechanical model in SLOPE (MohrCoulomb, ...)
@@ -116,7 +118,7 @@ class Material(BasePropertiesClass):
   parameter_type = {
     "ID" : int,
     "Name" : str,
-    "Color" : list,
+    "Color" : Color,
     "SeepModel" : str,
     "SlopeModel" : str,
     "StressModel" : str,

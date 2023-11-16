@@ -15,6 +15,7 @@ from .Material import Material
 from .Reinforcement import Reinforcement
 from .Mesh import Mesh
 from .Results import Results
+from .Function import Function
 
 class GeoStudioFile:
   """
@@ -32,6 +33,19 @@ class GeoStudioFile:
     self.materials = []
     self.reinforcements = []
     self.xml_items = []
+    self.functions = {
+      "Material" : {
+        "Hydraulic" : {
+          "KFns" : [],
+          "VolWCFns" : [],
+        },
+      },
+      "Boundary" : {
+        "Hydraulic" : {
+          "BoundFns" : [],
+        },
+      },
+    }
     self.initialize()
     return
 
@@ -40,7 +54,7 @@ class GeoStudioFile:
       case "Analyses": return self.analyses
       case "Materials": return self.materials
       case "Reinforcements": return self.reinforcements
-      case "Functions": return self.mesh_id
+      case "Functions": return self.__functionToList__(self.functions)
       case _:
         raise ValueError(f"No accessible item of name {item} through PyGeoStudio interface")
 
@@ -58,7 +72,6 @@ class GeoStudioFile:
     self.main_xml = ET.parse(src.open(prefix+'.xml'))
     root = self.main_xml.getroot()
     for element in root:
-      #print(element.tag)
       if element.tag == "FileInfo":
         self.f_src_info = element.attrib
         self.xml_items.append("FileInfo")
@@ -78,6 +91,9 @@ class GeoStudioFile:
       elif element.tag == "Reinforcements":
         self.__readReinforcements__(element)
         self.xml_items.append("Reinforcements")
+      elif element.tag == "Functions":
+        self.__readFunctions__(element)
+        self.xml_items.append("Functions")
       else:
         #store the item for the write method
         self.xml_items.append(element)
@@ -148,13 +164,30 @@ class GeoStudioFile:
       self.reinforcements.append(new_reinf)
     return
 
+  def __readFunctions__(self, et, current=[]):
+    s = self.functions
+    for x in current: s = s[x]
+    for d in et:
+      if d.tag not in s:
+        s[d.tag] = d
+      elif isinstance(s[d.tag], dict):
+        current.append(d.tag)
+        self.__readFunctions__(d, current)
+      elif isinstance(s[d.tag], list):
+        current.append(d.tag)
+        for infun in d:
+          fun = Function(infun)
+          fun.data["Types"] = [x for x in current]
+          s[d.tag].append(fun)
+        current.pop()
+    if current: current.pop()
+    return
 
   def showAnalysisTree(self):
     """
     Print the analysis tree in the GeoStudio file with analysis ID, name and parent ID if defined.
     """
     print(f"GeoStudio file: {self.f_src}")
-    #first pass, those with no parentID
     res = PrettyTable()
     res.field_names = ["ID","Name","ParentID"]
     for analysis in self.analyses:
@@ -286,6 +319,35 @@ class GeoStudioFile:
         return x
     raise ValueError(f"Reinforcements ID {ID} not found in file.")
 
+  def showFunctions(self):
+    """
+    Print a table showing the functions defined within the GeoStudio file.
+    """
+    res = PrettyTable()
+    res.field_names = ["Function Name","Types"]
+    l = self.__functionToList__(self.functions)
+    for function in l:
+      res.add_row([function['Name'],",".join(function['Types'])])
+    print(res)
+    return
+
+  def getFunctionByName(self, name, type_filter=None):
+    """
+    Return the Function corresponding to the name given. Can return the Function only if it is a given type.
+    
+    :param name: The name of the function in GeoStudio study
+    :type name: str
+    :param type_filter: Select Function belonging to the type given. Example ``["Material", "VolWCFn"]`` for searching only through functions applying to Material and of type Volumic Water Content.
+    :type type_filter: list of str
+    :meta private:
+    """
+    l = self.__functionToList__(self.functions)
+    for func in l:
+      if func["Name"] == name:
+        return func
+    raise ValueError(f"No function nammed {name} in file.")
+    return
+
   def genConfigurationFile(self):
     """
     Generate the main xml file and return it as a string
@@ -335,12 +397,40 @@ class GeoStudioFile:
         for reinf in self.reinforcements:
           sub_reinf = ET.SubElement(sub, "Reinforcement")
           reinf.__write__(sub_reinf)
+      elif element == "Functions":
+        sub = ET.SubElement(out_root, "Functions")
+        self.__writeFunctions__(self.functions, sub)
       else:
         #store the item for the write method
         out_root.append(element)
     tree_string = ET.tostring(out_root, encoding="UTF-8", xml_declaration=True, method="xml")
-    #tree_string = BeautifulSoup(tree_string, 'xml').prettify()
     return tree_string
+
+  def __writeFunctions__(self, d, et):
+    for k,v in d.items():
+      if isinstance(v, dict):
+        sub = ET.SubElement(et, k)
+        self.__writeFunctions__(v, sub)
+      elif isinstance(v, list): #write functions
+        sub = ET.SubElement(et, k)
+        sub.attrib = {"Len":str(len(v))}
+        for fun in v:
+          sub_fun = ET.SubElement(sub, k[:-1])
+          fun.__write__(sub_fun)
+      elif isinstance(v, ET):
+          et.append(v)
+      else:
+        raise RuntimeError("Error writing Functions... Did you modify the Function attribute yourself ? If no, this is an please contact for assistance")
+    return
+
+  def __functionToList__(self, d, l=[]):
+    for k,v in d.items():
+      if isinstance(v, dict):
+        self.__functionToList__(v, l)
+      elif isinstance(v, list):
+        for fun in v:
+          l.append(fun)
+    return l
 
   def save(self):
     """
@@ -393,10 +483,11 @@ class GeoStudioFile:
       compression=zipfile.ZIP_DEFLATED,
       compresslevel=compresslevel
     )
-    # Write 
+    # Write
+    src_prefix = self.f_src.split('/')[-1][:-4]
     zip_src = zipfile.ZipFile(self.f_src, 'r') #source geostudio zip
     for f in zip_src.namelist():
-      if f == prefix + ".xml": #main xml file
+      if f == src_prefix + ".xml": #main xml file
         main_xml_str = self.genConfigurationFile()
         zip_out.writestr(prefix + ".xml", data=main_xml_str)
       #TODO: meshes
@@ -412,4 +503,4 @@ class GeoStudioFile:
 #      zip_out.writestr(mesh_name, data=byte_str.getvalue())
     print(f"GeoStudio study successfully written in {f_out}")
     return
-  
+

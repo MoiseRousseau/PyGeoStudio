@@ -5,5 +5,7 @@ from .Context import Context
 from .Material import Material
 from .Reinforcement import Reinforcement
 from .Mesh import Mesh
+from .Function import Function
 from .Results import Results
 from .utils import *
+from .Color import Color

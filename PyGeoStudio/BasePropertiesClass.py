@@ -50,7 +50,7 @@ class BasePropertiesClass:
     if property_ in self.data.keys(): #return to the user
       if property_ in self.parameter_type.keys(): # already seen and handled but PyGeoStudio
         func = self.parameter_type[property_]
-        if func in [dict, int, str, list, float, bool]: #Convert to standard Python object
+        if func in [dict, int, str, float, bool]: #Convert to standard Python object
           return func(self.data[property_])
         else: #returned the PyGeoStudio object
           return self.data[property_]
@@ -72,8 +72,9 @@ class BasePropertiesClass:
     1. If the property is Missing, skip it
     2. If the property is a subtree not known / handled by PyGeoStudio, store it as is
     3. If the property is interpreted as a dict, take the attribute
-    4. If a custom class stores the property, call the constructor
-    5. Parse property as a string
+    4. If the property is interpreted as a list, parse the list
+    5. If a custom class stores the property, call the constructor
+    6. Parse property as a string
     """
     for prop in et:
       prop_type = self.parameter_type.get(prop.tag)
@@ -87,18 +88,30 @@ class BasePropertiesClass:
       elif prop_type is dict: 
         self.data[prop.tag] = prop.attrib
       # 4
+      elif prop_type is list:
+        header = [x for x in prop[0].attrib.keys()]
+        self.data[prop.tag] = [header]
+        for d in prop:
+          v = [d.tag] + [x for x in d.attrib.values()]
+          self.data[prop.tag].append(v)
+      # 5
       elif prop_type not in [int, str, float, list, bool] : 
         self.data[prop.tag] = self.parameter_type[prop.tag](prop)
+      # 6
       elif len(prop) == 0:
         self.data[prop.tag] = prop.text
       else:
         raise ValueError("You are not supposed to be here...")
+
+    #custom method to set other property
+    self.__initialize__()
     return
 
   def __write__(self, et):
     """
     Write back the properties in an XML Tree to save the GeoStudio file
     """
+    self.__deinitialize__()
     for tag,val in self.data.items():
       if tag in self.my_data: continue #skip property defined in this lib
       if self.parameter_type[tag] not in [int, dict, str, float, list, bool]:
@@ -109,11 +122,30 @@ class BasePropertiesClass:
       if isinstance(val, dict):
         sub.attrib = val
         continue
+      if isinstance(val, list):
+        sub.attrib = {"Len":str(len(val)-1)}
+        header = val[0]
+        for v in val[1:]:
+          item = ET.SubElement(sub, v[0])
+          item.attrib = {x:y for x,y in zip(header,v[1:])}
+        continue
       if not isinstance(val, str):
         raise ValueError(f"Can't write property {tag} because value is not a string: {val}")
       sub.text = val
     for prop in self.other_elem:
       et.append(prop)
+    return
+
+  def __initialize__(self):
+    """
+    Post process some attribute
+    """
+    return
+
+  def __deinitialize__(self):
+    """
+    De-process some attribute for the write method
+    """
     return
 
   def getAllProperties(self):

@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 from .BasePropertiesClass import BasePropertiesClass
+from .Color import Color
 
 class Reinforcement(BasePropertiesClass):
   """
@@ -10,7 +11,7 @@ class Reinforcement(BasePropertiesClass):
   :param ID: index of the reinforcement in the GeoStudio study
   :type ID: float
   :param Color: RGB color (0 to 255) of the material in GeoStudio study.
-  :type Color: [int, int, int]
+  :type Color: PyGeoStudio.Color object
   :param ShearForce:
   :type ShearForce: float
   :param ShearReductionFactor:
@@ -48,7 +49,7 @@ class Reinforcement(BasePropertiesClass):
       "Name" : str, 
       "Type" : str, #Must be Anchors, Pile, Geosynthetic, Nail, UserDefined (seems to be Anchors by default)
       "ID" : int,
-      "Color" : list,
+      "Color" : Color,
       "ShearForce" : float, #Pile, Anchors
       "ShearReductionFactor" : float, #Pile, Anchors
       "Spacing" : float, #Anchors, Nail
