@@ -21,7 +21,7 @@ class Geometry:
       case "Points": return self.points
       case "Lines": return self.lines
       case "Regions": return self.regions
-      case "MeshId": return int(self.mesh_id)
+      case "MeshId": return None if self.mesh_id is None else int(self.mesh_id)
       case "Mesh": return self.mesh
       case "Name": return self.name
     return
@@ -141,12 +141,4 @@ class Geometry:
     for prop in self.other_elem:
       et.append(prop)
     return
-  
-  
-  def importMesh(self, mesh):
-    """
-    Import a externally defined mesh for the current geometry
-    """
-    return
-    
 

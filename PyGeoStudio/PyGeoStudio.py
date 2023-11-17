@@ -101,6 +101,7 @@ class GeoStudioFile:
     # Parse meshes used in the study
     for geom in self.geometries:
       meshid_geom = geom["MeshId"]
+      if meshid_geom is None: continue
       f_mesh = f"mesh_{meshid_geom}.ply"
       try:
         mesh_obj = Mesh(meshid_geom, src.open(f_mesh))
@@ -108,6 +109,20 @@ class GeoStudioFile:
         warnings.warn(f"Unable to find mesh defined for Geometry Name \"{geom['Name']}\" under {f_mesh}")
       self.meshes.append(mesh_obj)
       geom.mesh = mesh_obj
+
+    #make function accessible from object
+    for mat in self.materials:
+      if mat["SeepModel"] == "SatUnsat":
+        index = mat["Hydraulic"]["KFnNum"]
+        for fun in self.functions["Material"]["Hydraulic"]["KFns"]:
+          if fun["ID"] == index:
+            mat["Hydraulic"]["KFn"] = fun
+            break
+        index = mat["Hydraulic"]["VolWCFnNum"]
+        for fun in self.functions["Material"]["Hydraulic"]["VolWCFns"]:
+          if fun["ID"] == index:
+            mat["Hydraulic"]["VolWCFn"] = fun
+            break
 
     # Create analysis structure, i.e. define Geometry, Mesh, Context and Results
     for analysis in self.analyses:

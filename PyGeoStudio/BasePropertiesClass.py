@@ -95,7 +95,7 @@ class BasePropertiesClass:
           v = [d.tag] + [x for x in d.attrib.values()]
           self.data[prop.tag].append(v)
       # 5
-      elif prop_type not in [int, str, float, list, bool] : 
+      elif "PyGeoStudio" in str(prop_type):
         self.data[prop.tag] = self.parameter_type[prop.tag](prop)
       # 6
       elif len(prop) == 0:
@@ -134,6 +134,7 @@ class BasePropertiesClass:
       sub.text = val
     for prop in self.other_elem:
       et.append(prop)
+    self.__initialize__()
     return
 
   def __initialize__(self):

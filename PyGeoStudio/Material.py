@@ -69,10 +69,14 @@ class MaterialHydraulicFunction(BasePropertiesClass):
   :type VolWC: float
   :param Beta: Compressibility
   :type Beta: float
-  :param KFnNum: Hydraulic conductivity function (for SatUnsat material). Experimental
+  :param KFn: Hydraulic conductivity function
+  :type KFn: PyGeoStudio.Function objet
+  :param VolWCFn: Water retention curve function
+  :type VolWCFn: PyGeoStudio.Function objet
+  :param KFnNum: Index of hydraulic conductivity function in GeoStudio file (for SatUnsat material), do not change.
   :type KFnNum: int
-  :param VolWCNum: Water retention curve (for SatUnsat material). Experimental
-  :type VolWCNum: int
+  :param VolWCFnNum: Index of water retention curve in GeoStudio file (for SatUnsat material), , do not change.
+  :type VolWCFnNum: int
   """
   parameter_type = {
     # If Sat only
@@ -80,9 +84,12 @@ class MaterialHydraulicFunction(BasePropertiesClass):
     "VolWC":float, #Saturated volumic Water Content (porosity)
     "Beta":float,
     # If non-sat
-    "KFnNum":Function, #Relative permeability function
-    "VolWCFnNum":Function, #Water Retention Curve
+    "KFnNum":int, #ID of Relative permeability function
+    "VolWCFnNum":int, #ID of Water Retention Curve
+    "KFn":Function, #Relative permeability function
+    "VolWCFn":Function, #Water Retention Curve
   }
+  my_data = ["KFn", "VolWCFn"]
 
   def read(self, et):
     self.data = dict(et.attrib)
@@ -92,7 +99,7 @@ class MaterialHydraulicFunction(BasePropertiesClass):
     """
     Custom write function to write properties as an attribute.
     """
-    sub.attrib = {x:y for x,y in self.data.items()}
+    sub.attrib = {x:y for x,y in self.data.items() if x not in self.my_data}
     return
 
 

@@ -45,6 +45,46 @@ class Function(BasePropertiesClass):
     plt.show()
     return
   
+  def getXData(self):
+    """
+    Helper method to extract the X data of the Points attribute.
+
+    :return: The X datapoints of the function
+    :rtype: numpy array
+    """
+    return self.data["Points"][:,0]
+
+  def setXData(self, values):
+    """
+    Helper method to set the X data of the Points attribute.
+    Size must match the actual X data.
+
+    :param values: The new X data
+    :type values: numpy array or list
+    """
+    self.data["Points"][:,0] = values
+    return
+
+  def getYData(self):
+    """
+    Helper to extract the Y data of the Points attribute.
+
+    :return: The Y datapoints of the function
+    :rtype: numpy array
+    """
+    return self.data["Points"][:,1]
+
+  def setYData(self, values):
+    """
+    Helper method to set the Y data of the Points attribute.
+    Size must match the actual Y data.
+
+    :param values: The new Y data
+    :type values: numpy array or list
+    """
+    self.data["Points"][:,1] = values
+    return
+
   def __initialize__(self):
     self.header = self.data["Points"][0]
     self.tags = [ x[0] for x in self.data["Points"][1:] ]
