@@ -6,6 +6,14 @@ import warnings
 
 
 class Mesh:
+  """
+  :param MeshId: Index of the mesh
+  :type MeshId: int
+  :param Vertices: XY coordinates of mesh vertices
+  :type Vertices: numpy array
+  :param Elements: list of mesh vertices defining the mesh elements
+  :type Elements: list
+  """
   def __init__(self, mesh_id, src_mesh):
     self.mesh_id = mesh_id
     self.mesh = plyfile.PlyData.read(src_mesh)

@@ -6,6 +6,20 @@ import xml.etree.ElementTree as ET
 # Or maybe the base class is not general enough ... ?
 
 class Geometry:
+  """
+  :param Points: XY coordinates of the points in the geometry
+  :type Points: numpy array
+  :param Lines: List of lines in the geometry
+  :type Lines: list
+  :param Regions: List of regions in the geometry
+  :type Regions: list
+  :param MeshId: Index of the mesh associated with the geometry (do not change)
+  :type MeshId: int
+  :param Mesh: Mesh associated with the geometry
+  :type Mesh: PyGeoStudio.Mesh object
+  :param Name: Name of the geometry
+  :type Name: str
+  """
   def __init__(self):
     self.points = None
     self.lines = None
@@ -27,6 +41,14 @@ class Geometry:
     return
   
   def draw(self, show=True):
+    """
+    Draw the geometry using matplotlib
+    
+    :param show: Show the figure (``True``, default) or plot it and show it latter (``False``)
+    :type show: bool
+    :return: Matplotlib figure and axis containing the plotted geometry
+    :rtype: [fig,ax]
+    """
     fig, ax = plt.subplots()
     #draw points
     ax.scatter(self.points[:,0], self.points[:,1], color='k')
@@ -76,6 +98,9 @@ class Geometry:
     """
     Create new points, new lines and a region based on the point coordinates given.
     Must be given in order so they form a convex and non-intersecting polygon when joined successively.
+    
+    :param pts: The coordinate of the points to create a region
+    :type pts: numpy array or list of list
     """
     n_pts_ini = len(self.points)
     self.add_points(pts)
@@ -87,14 +112,32 @@ class Geometry:
     return
   
   def addPoints(self, pts):
+    """
+    Add points to the geometry.
+    
+    :param pt: XY coordinates of the points
+    :type pt: numpy array or list of list
+    """
     self.points = np.append(self.points, pts)
     return
     
   def addLines(self, lines):
+    """
+    Add lines to the geometry.
+    
+    :param lines: Start-end indices of the points that form the lines
+    :type lines: numpy array or list of list
+    """
     self.lines = np.append(self.lines, new_lines)
     return
   
   def addRegions(self, pt_ids):
+    """
+    Create region with existing point given
+    
+    :param pt_ids: Indices of the point
+    :type pt_ids: list of int
+    """
     new_id = len(self.regions) + 1
     new_reg = [pt_ids, []]
     self.regions[f"Regions-{new_id}"] = new_reg

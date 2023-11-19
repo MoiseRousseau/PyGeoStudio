@@ -27,17 +27,27 @@ Features
    * - Write (possibly modified) GeoStudio File
      - OK
    * - Launch GeoStudio through Python
+     - OK
+   * - Launch parametric study
+     - OK
+   * - Launch automatic calibration
+     - TODO
+   * - Launch sensitivity analysis with true design of experiment
+     - TODO
+   * - Uncertainty analysis through bayesian framework
+     - TODO
+   * - Create and duplication object
      - TODO
    * - Change analysis geometry (define points, lines, regions)
      - OK
    * - Change material distribution
      - OK
    * - Access and change hydraulic properties of materials
-     - Saturated only
+     - OK
    * - Access and change geotechnical properties of materials
      - Mohr-Coulomb model only
-   * - Interface to functions (such as unsaturated properties)
-     - TODO
+   * - Interface to functions (material and BC)
+     - OK
    * - Interface to boundary conditions
      - TODO
    * - Access and change reinforcement properties

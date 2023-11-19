@@ -1,5 +1,5 @@
 import subprocess
-from .PyGeoStudio import GeoStudioFile
+import PyGeoStudio
 from .GeoPath import geopath
 
 def defineGeoStudioLauncher(path):
@@ -9,9 +9,11 @@ def defineGeoStudioLauncher(path):
   :param path: Path to GeoStudio installation
   :type path: str
   """
-  out = open("GeoPath.py",'w')
+  base_dir = "/".join(PyGeoStudio.__file__.split("/")[:-1])
+  out = open(base_dir+"/GeoPath.py",'w')
   out.write(f"geopath = \"{path.rstrip()}\"")
   out.close()
+  testLauncher(path.rstrip())
   return
 
 def run(geofile, analyses_to_solve=None, shell=True):
@@ -25,7 +27,7 @@ def run(geofile, analyses_to_solve=None, shell=True):
   :param shell: Show the console (optional, ``True`` by default)
   :type shell: bool
   """
-  if isinstance(geofile, GeoStudioFile):
+  if isinstance(geofile, PyGeoStudio.GeoStudioFile):
     geofile = geofile.f_src
   cmd = [geopath + "/Bin/GeoCmd.exe", geofile] + analyses_to_solve + ["/solve"]
   print("#################################")
@@ -34,3 +36,13 @@ def run(geofile, analyses_to_solve=None, shell=True):
   print(ret_code)
   print("#################################")
   return ret_code
+
+def testLauncher(path=None):
+  if path is None: path = geopath
+  cmd = [path + "/Bin/GeoCmd.exe"]
+  ret_code = subprocess.run(cmd, shell=True).returncode
+  if ret_code != 0:
+    raise ValueError("Can't find GeoStudio executables with the path provided. Please correct the path and redefine it with defineGeoStudioLauncher() method")
+  else:
+    print("Successfully tested GeoStudio executable")
+  return

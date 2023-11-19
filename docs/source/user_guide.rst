@@ -59,16 +59,19 @@ Write back the modified study
     geofile.writeGeoStudioFile(out_file)
 
 
-Classes description
--------------------
+Classes description (by alphabetical order)
+-------------------------------------------
 
 .. toctree::
    :maxdepth: 1
    
    classes/geostudiofile.rst
-   classes/material.rst
    classes/analysis.rst
+   classes/color.rst
    classes/context.rst
+   classes/function.rst
+   classes/geometry.rst
+   classes/material.rst
    classes/mesh.rst
    classes/reinforcement.rst
    classes/results.rst

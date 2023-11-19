@@ -27,4 +27,19 @@ To do so, `open a Powershell interpretor <https://www.howtogeek.com/662611/9-way
 Make PyGeoStudio recognize GeoStudio
 ------------------------------------
 
-TODO
+In order to call GeoStudio solver from Python, PyGeoStudio must know where is GeoStudio installed.
+By default, PyGeoStudio searches for executable in ``"C:/Program Files/Seequent/GeoStudio 2023.1"`` (i.e. in the default GeoStudio installation folder).
+If you install GeoStudio elsewhere, you must set that folder by opening the Python console (through Idle) or using the PowerShell interpretor (command ``python``) and typing:
+
+.. code-block:: python
+
+    import PyGeoStudio as pgs
+    pgs.defineGeoStudioLauncher("C:/Program Files/Seequent/GeoStudio 2023.1")
+    exit()
+
+
+Replace the string ``"C:/Program Files/Seequent/GeoStudio 2023.1"`` by your path to GeoStudio and correct the version if necessary.
+Note this is a one time action.
+Once set, the path will be stored in the library for future call.
+The change takes effect after the next import of PyGeoStudio.
+This means you can't set the path to GeoStudio in the same script that is doing calculations.
