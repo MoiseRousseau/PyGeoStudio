@@ -114,7 +114,8 @@ class BasePropertiesClass:
     self.__deinitialize__()
     for tag,val in self.data.items():
       if tag in self.my_data: continue #skip property defined in this lib
-      if self.parameter_type[tag] not in [int, dict, str, float, list, bool]:
+      prop_type = self.parameter_type.get(tag)
+      if "PyGeoStudio" in str(prop_type):
         sub = ET.SubElement(et, tag)
         val.__write__(sub)
         continue

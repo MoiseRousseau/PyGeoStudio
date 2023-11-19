@@ -175,7 +175,7 @@ class GeoStudioFile:
     self.n_reinforcements = int(element.attrib["Len"])
     for i in range(self.n_reinforcements):
       reinf_ = element[i]
-      new_reinf = Reinforcement({x.tag:x.text for x in reinf_})
+      new_reinf = Reinforcement(reinf_)
       self.reinforcements.append(new_reinf)
     return
 
@@ -236,6 +236,21 @@ class GeoStudioFile:
       if analysis["ID"] == ID:
         return analysis
     raise ValueError(f"Analysis ID {ID} not found in file.")
+
+  def showGeometries(self):
+    """
+    Print the geometries definied within the GeoStudio file
+    """
+    res = PrettyTable()
+    res.field_names = ["Name", "Analysis ID defined"]
+    for geom_id,geom in enumerate(self.geometries):
+      analysis_defined = []
+      for analysis in self.analyses:
+        if analysis["GeometryId"] == geom_id+1:
+          analysis_defined.append(str(analysis["ID"]))
+      res.add_row([geom['Name'],",".join(analysis_defined)])
+    print(res)
+    return
 
   def getGeometryByID(self, ID):
     """

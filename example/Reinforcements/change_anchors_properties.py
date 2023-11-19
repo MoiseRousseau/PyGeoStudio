@@ -20,4 +20,4 @@ if __name__ == "__main__":
   
   # Write back the study with the modified pullout resistance
   out_file = "./Reinforcement_with_Anchors_modified.gsz"
-  geofile.writeGeoStudioFile(out_file)
+  geofile.saveAs(out_file)

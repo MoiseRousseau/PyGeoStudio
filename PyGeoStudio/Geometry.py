@@ -53,9 +53,14 @@ class Geometry:
     #draw points
     ax.scatter(self.points[:,0], self.points[:,1], color='k')
     #draw lines
-    for line in self.lines:
-      X1, Y1 = self.points[line[0]]
-      X2, Y2 = self.points[line[1]]
+    for region in self.regions.values():
+      region = region[0]
+      for i in range(len(region)-1):
+        X1, Y1 = self.points[region[i]-1]
+        X2, Y2 = self.points[region[i+1]-1]
+        ax.plot([X1,X2],[Y1,Y2], 'k')
+      X1, Y1 = self.points[region[-1]-1]
+      X2, Y2 = self.points[region[0]-1]
       ax.plot([X1,X2],[Y1,Y2], 'k')
     if show:
       plt.show()

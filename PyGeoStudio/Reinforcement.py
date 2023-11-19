@@ -43,27 +43,25 @@ class Reinforcement(BasePropertiesClass):
   :param ForceOrientation:
   :type ForceOrientation: float
   """
-  def __init__(self, data):
-    self.data = data
-    self.parameter_type = {
-      "Name" : str, 
-      "Type" : str, #Must be Anchors, Pile, Geosynthetic, Nail, UserDefined (seems to be Anchors by default)
-      "ID" : int,
-      "Color" : Color,
-      "ShearForce" : float, #Pile, Anchors
-      "ShearReductionFactor" : float, #Pile, Anchors
-      "Spacing" : float, #Anchors, Nail
-      "BondLength" : float, #Anchors
-      "BondDiameter" : float, #Anchors, Nail
-      "PulloutReductionFactor" : float, #Anchors, Geosynthetic, Nail
-      "ReinforcementForceReductionFactor" : float, #Anchors, Geosynthetic, Nail, UserDefined
-      "TensileCapacity" : float, #Anchors, Geosynthetic, Nail
-      "PulloutResistance" : float, #Anchors, Geosynthetic, Nail
-      "ForceDistribution" : str, #Anchors, UserDefined
-      "FofSDependent" : bool, #Geosynthetic, Nail, UserDefined
-      "CalculatedPulloutResistance" : bool, #Geosynthetic
-      "SurfaceAreaFactor" : float, #Geosynthetic
-      "ReinfForceVsDistanceFnNum" : int, #UserDefined
-      "ForceOrientation" : float, #UserDefined
-    }
-    return
+
+  parameter_type = {
+    "Name" : str,
+    "Type" : str, #Must be Anchors, Pile, Geosynthetic, Nail, UserDefined (seems to be Anchors by default)
+    "ID" : int,
+    "Color" : Color,
+    "ShearForce" : float, #Pile, Anchors
+    "ShearReductionFactor" : float, #Pile, Anchors
+    "Spacing" : float, #Anchors, Nail
+    "BondLength" : float, #Anchors
+    "BondDiameter" : float, #Anchors, Nail
+    "PulloutReductionFactor" : float, #Anchors, Geosynthetic, Nail
+    "ReinforcementForceReductionFactor" : float, #Anchors, Geosynthetic, Nail, UserDefined
+    "TensileCapacity" : float, #Anchors, Geosynthetic, Nail
+    "PulloutResistance" : float, #Anchors, Geosynthetic, Nail
+    "ForceDistribution" : str, #Anchors, UserDefined
+    "FofSDependent" : bool, #Geosynthetic, Nail, UserDefined
+    "CalculatedPulloutResistance" : bool, #Geosynthetic
+    "SurfaceAreaFactor" : float, #Geosynthetic
+    "ReinfForceVsDistanceFnNum" : int, #UserDefined
+    "ForceOrientation" : float, #UserDefined
+  }
