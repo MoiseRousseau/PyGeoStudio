@@ -3,51 +3,44 @@
 Python library allowing reading/writing GeoStudio .gsz file. 
 But, why do you need an external software such as Python to read your file while GeoStudio possess graphical tool to create your analysis and visualize your data ?
 
-1. Automatise your numerical model processing without the need to export it in Excel
+1. Automatise your numerical model processing
 2. Harness the power of Python to treat your data
-3. Make quality plots using [matplotlib](www.matplotlib.org)
+3. Make quality plots using [matplotlib](www.matplotlib.org) or export to powerful post-processing tools as Paraview or Tecplot
 4. Modify analysis without using the graphical interface
 5. Program analysis (e.g. the same analysis but with different parameters)
-6. Perform automatic calibration / optimisation
-7. The idea you have in mind which is not included in the 6 before
+6. Perform automatic calibration, optimisation and sensitivity analysis
+7. Real-time forecast and predictive modelling
+8. The idea you have in mind which is not included in the 7 before
 
-## Use case (TODO)
 
-* Scripting
-* Statistical modelling / Sensitivity analysis
-* Automatic calibration
-* Design optimization
-* Real-time forecast and predictive modelling
-* Model converger
-* Post-processing (Paraview, Matplotlib)
+## Usefull link
+
+* **Documentation**: [pygeostudio.readthedocs.io](https://pygeostudio.readthedocs.io/en/stable/)
+* **User forum**: [Discussion tab](https://github.com/MoiseRousseau/PyGeoStudio/discussions)
+* **Report issues**: [Issue tab](https://github.com/MoiseRousseau/PyGeoStudio/issues)
+
 
 ## Installation
 
-1. Clone or download this repository
+Getting PyGeoStudio started requires Python and making GeoStudio recognized by Python. Please see the documentation [here](https://pygeostudio.readthedocs.io/en/stable/install.html)
 
-2. Go into the (extracted) folder and run `pip install .`
 
 ## Examples
 
-One example is provided in the folder `example`. 
-It contains the `rapid_drawdown` tutorial problem found on GeoStudio website.
-In this example, `PyGeoStudio` is used to plot the overall problem and to plot the evolution of the pore wwater pressure at a given point. 
+Examples are provided in the folder `example`. 
+It contains:
 
-## Roadmap
+* Access the SEEP output of solved analysis and export it for processing with Paraview
+* Making plots with Matplotlib
+* Change geometry, and material and reinforcement properties
+* Run parametric study
 
-* Improve reading
-* Implement writing (to modify the input file)
-* Solve analysis directly in Python
-* Loop over input - solve - output to allow optimization
-* Other examples
 
 ## Contributing
 
 Every contribution is welcome!
-Note this is a brand new project for me, and that I develop the library based on my need.
+Note this is a fairly new project developped on my free time.
 If you have a particular problem with GeoStudio you want to solve with Python, just let me know, and I would figure out what I can do to help you.
 
 If you like this project, please star it! 
 It will encourage me to pursuit its development.
-
-
