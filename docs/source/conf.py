@@ -13,13 +13,21 @@ sys.path.insert(0, os.path.abspath('../..'))
 project = 'PyGeoStudio'
 copyright = '2023, Moïse Rousseau'
 author = 'Moïse Rouseau'
-release = '0.2.0'
+release = '0.4.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx.ext.autodoc']
+extensions = [
+  'sphinx.ext.autodoc',
+  'sphinx_gallery.gen_gallery',
+]
 autodoc_mock_imports = ['numpy','zipfile','plyfile','prettytable','matplotlib','bs4']
+sphinx_gallery_conf = {
+     'examples_dirs': '../../examples',   # path to your example scripts
+     'gallery_dirs': 'gallery_examples',  # path to where to save gallery generated output
+     'nested_sections': False,
+}
 
 templates_path = ['_templates']
 exclude_patterns = []

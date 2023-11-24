@@ -1,3 +1,10 @@
+"""
+Simple example fitting saturated hydraulic conductivity
+=======================================================
+
+"""
+
+
 import sys
 import os
 import shutil
@@ -11,7 +18,7 @@ from scipy.optimize import curve_fit
 
 
 # Save a copy of the actual study (the calibration process modify the file in place)
-src_file = "Rapid drawdown.gsz"
+src_file = "../GeoStudio_files/Rapid drawdown.gsz"
 copy_file = '.'.join(src_file.split('.')[:-1]) + "_tmp.gsz"
 geofile_src = pgs.GeoStudioFile(src_file)
 geofile_src.saveAs(copy_file)

@@ -1,3 +1,9 @@
+"""
+Some basics
+===========
+
+"""
+
 import sys
 import os
 path = os.getcwd() + '/../../'
@@ -8,7 +14,7 @@ import PyGeoStudio as pgs
 if __name__ == "__main__":
 
   #open source geostudio study
-  src_file = "test.gsz" 
+  src_file = "../GeoStudio_files/test.gsz"
   geofile = pgs.GeoStudioFile(src_file)
   
   #show geometry

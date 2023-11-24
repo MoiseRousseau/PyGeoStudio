@@ -1,3 +1,10 @@
+"""
+Change reinforcement properties
+===============================
+
+"""
+
+
 import sys
 import os
 path = os.getcwd() + '/../../'
@@ -5,8 +12,9 @@ sys.path.append(path)
 
 import PyGeoStudio as pgs
 
+
 if __name__ == "__main__":
-  src_file = "Reinforcement with Anchors.gsz" #specify the geostudio study file
+  src_file = "../GeoStudio_files/Reinforcement with Anchors.gsz" #specify the geostudio study file
   
   geofile = pgs.GeoStudioFile(src_file) #open it with PyGeoStudio
   reinfs = geofile["Reinforcements"] #get reinforcements defined in the study

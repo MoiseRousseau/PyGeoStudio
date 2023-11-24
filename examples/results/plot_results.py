@@ -1,3 +1,10 @@
+"""
+Extract and plot results from analysis
+======================================
+
+"""
+
+
 import sys
 import os
 path = os.getcwd() + '/../../'
@@ -7,7 +14,7 @@ import PyGeoStudio as pgs
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
-  src_file = "Rapid drawdown.gsz" #specify the geostudio analyses file
+  src_file = "../GeoStudio_files/Rapid drawdown.gsz" #specify the geostudio analyses file
   
   geofile = pgs.GeoStudioFile(src_file) #open it with PyGeoStudio
   geofile.showAnalysisTree() #print analyses in the file

@@ -1,3 +1,9 @@
+"""
+Change material properties
+==========================
+
+"""
+
 import sys
 import os
 path = os.getcwd() + '/../../'
@@ -5,8 +11,9 @@ sys.path.append(path)
 
 import PyGeoStudio as pgs
 
+
 if __name__ == "__main__":
-  src_file = "Rapid drawdown.gsz" #specify the geostudio analyses file
+  src_file = "../GeoStudio_files/Rapid drawdown.gsz" #specify the geostudio analyses file
   
   geofile = pgs.GeoStudioFile(src_file) #open it with PyGeoStudio
   mats = geofile["Materials"] #get material defined in the analysis

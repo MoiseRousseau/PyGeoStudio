@@ -1,3 +1,9 @@
+"""
+Effect of saturated permeability on drawdown problem
+====================================================
+
+"""
+
 import sys
 import os
 path = os.getcwd() + '/../../'
@@ -8,7 +14,7 @@ import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
 
-  src_file = "Rapid drawdown.gsz" 
+  src_file = "../GeoStudio_files/Rapid drawdown.gsz"
   geofile = pgs.GeoStudioFile(src_file)
   mat = geofile.getMaterialByName("Dam fill")
 

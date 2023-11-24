@@ -73,6 +73,7 @@ Features
    
    install.rst
    user_guide.rst
+   gallery_examples/index
 
 
 
