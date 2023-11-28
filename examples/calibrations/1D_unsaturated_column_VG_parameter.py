@@ -13,7 +13,7 @@ geofile_src.saveAs(copy_file)
 
 # %%
 # Open the copy and get the analysis of interest:
-geofile = pgs.GeoStudioFile(src_file)
+geofile = pgs.GeoStudioFile(copy_file)
 mat = geofile.getMaterialByName("Material")
 WCfunction = mat["Hydraulic"]["VolWCFn"]
 Kfunction = mat["Hydraulic"]["KFn"]
@@ -34,8 +34,9 @@ WCfunction.resizeXYData(N)
 WCfunction.setXData(psi)
 Kfunction.resizeXYData(N)
 Kfunction.setXData(psi)
-def run_model(xdata, new_log_Ksat, tets, a, n, tetr, m):
+def run_model(xdata, new_log_Ksat, tets, a_log, n, tetr, m):
   new_Ksat = 10.**new_log_Ksat
+  a = 10**a_log
   # set the new hydraulic conductivity function
   theta = pgs.builtin_functions.VanGenuchtenWC(psi,tets, a, n, tetr)
   WCfunction.setYData(theta)
@@ -51,7 +52,7 @@ def run_model(xdata, new_log_Ksat, tets, a, n, tetr, m):
 # %%
 # Calibrate and print results:
 from scipy.optimize import curve_fit
-initial_guess = [np.log10(4e-7), 0.1, np.log10(1), 1, 0.4, 1]
+initial_guess = [np.log10(4e-7), 0.3, np.log10(1), 2, 0.04, 2]
 popt, pcov, info_dict, mesg, ier = curve_fit(
   run_model, Tdata, PWPdata, p0=initial_guess, full_output=True
 )
@@ -66,8 +67,8 @@ res.add_row(["Ksat", 10.**popt[0], 1e-6])
 res.add_row(["Saturated Water Content", popt[1], 0.453])
 res.add_row(["Air Entry Value", 10.**popt[2], 13])
 res.add_row(["VG n", popt[3], 2.3])
-res.add_row(["Ksat", popt[4], 1.5e-4])
-res.add_row(["K relative m", popt[5], 0.565])
+res.add_row(["Resisual Water Content", popt[4], 1.5e-4])
+res.add_row(["K relative m", popt[5], "User-defined"])
 print(res)
 
 # %%

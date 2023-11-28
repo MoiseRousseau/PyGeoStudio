@@ -140,8 +140,8 @@ class BasePropertiesClass:
         sub.attrib = val
         continue
       if isinstance(val, list):
-        sub.attrib = {"Len":str(len(val)-1)}
-        for v in val[1:]:
+        sub.attrib = {"Len":str(len(val))}
+        for v in val:
           item = ET.SubElement(sub, v[0])
           item.attrib = v[1]
         continue
