@@ -20,6 +20,7 @@ import xml.etree.ElementTree as ET
 import matplotlib.pyplot as plt
 
 from .BasePropertiesClass import BasePropertiesClass
+from .Results import Results
 
 
 # Note in the GeoStudioFile, material distribution / BC are defined through a Context element.
@@ -113,7 +114,7 @@ class Analysis(BasePropertiesClass):
     "Geometry" : None,
     "Context" : None,
     "ExcludeInitDeformation" : bool,
-    "Results": None,
+    "Results": Results,
     "TimeIncrements" : TimeIncrements,
     "ComputedPhysics" : dict,
 #      "ConvergenceCriteria" : None,

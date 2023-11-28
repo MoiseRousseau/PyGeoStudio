@@ -9,3 +9,4 @@ from .Function import Function
 from .Results import Results
 from .utils import *
 from .Color import Color
+from .builtin_functions import *

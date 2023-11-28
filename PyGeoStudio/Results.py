@@ -21,10 +21,13 @@ import zipfile
 from .BasePropertiesClass import BasePropertiesClass
 
 class Results:
-  def __init__(self, f_src, analysis_name, time, mesh=None):
+  def __init__(self, f_src, analysis, mesh=None):
     self.f_src = f_src
-    self.analysis_name = analysis_name
-    self.time = time
+    self.analysis = analysis
+    self.analysis_name = analysis["Name"]
+    self.saved_time = None
+    if self.analysis["Method"] == "Transient":
+      self.saved_time = tuple((i+1,float(x["ElapsedTime"])) for i,x in enumerate(analysis["TimeIncrements"]["TimeSteps"]) if x.get("Save"))
     self.mesh = mesh
     return
 
@@ -36,7 +39,7 @@ class Results:
     :rtype: list
     """
     src = zipfile.ZipFile(self.f_src)
-    res = src.open(f"{self.analysis_name.replace('/','&3')}/{1:0>3d}/node.csv", 'r')
+    res = src.open(f"{self.analysis_name.replace('/','&3')}/{0:0>3d}/node.csv", 'r')
     header = res.readline().decode().rstrip().split(',')
     res.close()
     src.close()
@@ -49,25 +52,27 @@ class Results:
     :return: The timestep
     :rtype: list
     """
-    return list(self.time) #return a copy
+    return [x[1] for x in self.saved_time] #return a copy
   
-  def getSnapshot(self, variable, time):
+  def getSnapshot(self, variable, time=None):
     """
     Extract the variable on the whole domain but at one particular time.
     
     :param variable: Name of variable desired (must match the name from ``getOutputVariables``)
     :type variable: str
-    :param time: Time at which to retrieve variable value
+    :param time: Time at which to retrieve variable value (required for transient analysis)
     :type time: float
     :return: Variable values ordered by node ID
     :rtype: numpy.array
     """
+    if self.analysis["Method"] == "Transient" and time is None:
+      raise ValueError("Transient analysis results requires the time to extract the snapshot")
     try:
       variable_index = self.getOutputVariables().index(variable)
     except:
       raise ValueError(f"Output variables \"{variable}\" not found in file. Available output variables are: {self.getOutputVariables()}")
     src = zipfile.ZipFile(self.f_src)
-    t_index = self.time.index(time)
+    t_index = [x[1] for x in self.saved_time].index(time)
     f = src.open(f"{self.analysis_name.replace('/','&3')}/{t_index:0>3d}/node.csv")
     data = np.genfromtxt(f, delimiter=',', skip_header=1)[:,variable_index] #remove point id
     f.close()
@@ -94,18 +99,19 @@ class Results:
     champions = [0 for i in range(len(locations))]
     for i,location in enumerate(locations):
       champions[i] = self.mesh.getPointIndexInMesh(location)
-    datas = [None for i in self.time]
+    datas = [None for i in self.saved_time]
     temp = np.zeros(len(locations), dtype='f8')
-    for i in range(len(self.time)):
+    for j,timestep in enumerate(self.saved_time):
+      i = timestep[0]
       temp[:] = np.nan
       f = src.open(f"{self.analysis_name.replace('/','&3')}/{i:0>3d}/node.csv")
       data = np.genfromtxt(f, delimiter=',', skip_header=1)
       index_in_results = [int(np.argwhere(data[:,0] == x)) for x in champions]
-      datas[i] = data[index_in_results,variable_index]
+      datas[j] = data[index_in_results,variable_index]
       f.close()
     final_datas = np.array(datas)
     src.close()
-    X = np.zeros_like(final_datas) + np.array(self.time)[:,None]
+    X = np.zeros_like(final_datas) + np.array([x[1] for x in self.saved_time])[:,None]
     Y = final_datas
     if len(locations) == 1:
       X = X.squeeze()
@@ -125,7 +131,8 @@ class Results:
       raise RuntimeError("Please install MeshIO to use this capability")
     
     points, cells = self.mesh.asMeshIOData()
-    for i,t in enumerate(self.time):
+    for i,timestep in enumerate(self.saved_time):
+      t = timestep[1]
       point_data = {variable:self.getSnapshot(variable, t) for variable in self.getOutputVariables()}
       out_mesh = meshio.Mesh(points=points, cells=cells, point_data=point_data)
       out_mesh.write(path+f".{i:0>3d}", file_format="vtu")
@@ -147,7 +154,8 @@ class Results:
     points, cells = self.mesh.asMeshIOData()
     with meshio.xdmf.TimeSeriesWriter(path) as writer:
       writer.write_points_cells(points, cells)
-      for t in self.time:
+      for timestep in self.saved_time:
+        t = timestep[0]
         point_data = {variable:self.getSnapshot(variable, t) for variable in self.getOutputVariables()}
         print(point_data["Node"][20], point_data["PoreWaterPressure"][20])
         writer.write_data(t, point_data=point_data)

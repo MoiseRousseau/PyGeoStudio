@@ -82,3 +82,8 @@ class Reinforcement(BasePropertiesClass):
     "ReinfForceVsDistanceFnNum" : int, #UserDefined
     "ForceOrientation" : float, #UserDefined
   }
+
+  def __initialize__(self):
+    #if type is None, reinforcement is Anchor by default
+    if self.data.get("Type") is None: self.data["Type"] = "Anchors"
+    return

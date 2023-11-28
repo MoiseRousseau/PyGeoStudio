@@ -106,10 +106,9 @@ class BasePropertiesClass:
         self.data[prop.tag] = prop.attrib
       # 4
       elif prop_type is list:
-        header = [x for x in prop[0].attrib.keys()]
-        self.data[prop.tag] = [header]
+        self.data[prop.tag] = []
         for d in prop:
-          v = [d.tag] + [x for x in d.attrib.values()]
+          v = [d.tag, d.attrib]
           self.data[prop.tag].append(v)
       # 5
       elif "PyGeoStudio" in str(prop_type):
@@ -142,10 +141,9 @@ class BasePropertiesClass:
         continue
       if isinstance(val, list):
         sub.attrib = {"Len":str(len(val)-1)}
-        header = val[0]
         for v in val[1:]:
           item = ET.SubElement(sub, v[0])
-          item.attrib = {x:y for x,y in zip(header,v[1:])}
+          item.attrib = v[1]
         continue
       if not isinstance(val, str):
         raise ValueError(f"Can't write property {tag} because value is not a string: {val}")

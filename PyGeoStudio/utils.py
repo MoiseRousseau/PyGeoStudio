@@ -40,13 +40,17 @@ def run(geofile, analyses_to_solve=None, shell=True):
   :param geofile: The GeoStudio file to run (path or opened study)
   :type geofile: GeoStudioFile object or str
   :param analyses_to_solve: A list of the analysis to run (optional, default all analyses)
-  :type analyses_to_solve: list of str
+  :type analyses_to_solve: list of PyGeoStudio.Analysis object
   :param shell: Show the console (optional, ``True`` by default)
   :type shell: bool
   """
   if isinstance(geofile, PyGeoStudio.GeoStudioFile):
     geofile = geofile.f_src
-  cmd = [geopath + "/Bin/GeoCmd.exe", geofile] + analyses_to_solve + ["/solve"]
+  if analyses_to_solve is not None:
+    analyses_to_solve_name = [x["Name"] for x in analyses_to_solve]
+  else:
+    analyses_to_solve_name = []
+  cmd = [geopath + "/Bin/GeoCmd.exe", geofile] + analyses_to_solve_name + ["/solve"]
   print("#################################")
   print("Calling GeoStudio solver")
   ret_code = subprocess.run(cmd, shell=shell)

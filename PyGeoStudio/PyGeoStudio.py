@@ -147,8 +147,7 @@ class GeoStudioFile:
       analysis["Geometry"] = geom
       analysis["Results"] = Results(
         self.f_src,
-        analysis["Name"],
-        time=tuple(float(x["ElapsedTime"]) for x in analysis["TimeIncrements"]["TimeSteps"]) if analysis["Method"] == "Transient" else [-1],
+        analysis,
         mesh=geom.mesh,
       )
     for context in self.contexts:
@@ -464,7 +463,7 @@ class GeoStudioFile:
         for fun in v:
           sub_fun = ET.SubElement(sub, k[:-1])
           fun.__write__(sub_fun)
-      elif isinstance(v, ET):
+      elif isinstance(v, ET.Element):
           et.append(v)
       else:
         raise RuntimeError("Error writing Functions... Did you modify the Function attribute yourself ? If no, this is an please contact for assistance")

@@ -17,6 +17,7 @@ geofile = pgs.GeoStudioFile(src_file)
 mat = geofile.getMaterialByName("Dam fill")
 Kfunction = mat["Hydraulic"]["KFn"]
 
+
 # %%
 # Then we define the saturated hydraulic conductivity to test in our parametric study and initiate Python list to get the results of the simulation.
 
@@ -39,9 +40,9 @@ for new_Ksat in Ksats:
   Kfunction.setYData(new_Ksat/actual_Ksat * actual_relK)
   # run GeoStudio
   geofile.save()
-  pgs.run(geofile, analyses_to_solve=["2 - Instantaneous drawdown"])
-  # get results
   instant_drawdown = geofile.getAnalysisByName("2 - Instantaneous drawdown")
+  pgs.run(geofile, analyses_to_solve=[instant_drawdown])
+  # get results
   T,PWP = instant_drawdown["Results"].getVariablesVsTime(
     "PoreWaterPressure",
     locations=[[25,2]]

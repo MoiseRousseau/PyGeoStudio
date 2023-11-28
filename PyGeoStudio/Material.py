@@ -92,7 +92,7 @@ class MaterialHydraulicFunction(BasePropertiesClass):
   :type VolWCFn: PyGeoStudio.Function objet
   :param KFnNum: Index of hydraulic conductivity function in GeoStudio file (for SatUnsat material), do not change.
   :type KFnNum: int
-  :param VolWCFnNum: Index of water retention curve in GeoStudio file (for SatUnsat material), , do not change.
+  :param VolWCFnNum: Index of water retention curve in GeoStudio file (for SatUnsat material), do not change.
   :type VolWCFnNum: int
   """
   parameter_type = {

@@ -42,8 +42,18 @@ class Function(BasePropertiesClass):
     "Function" : str,
     "Estimate" : str,
     "Types" : list,
+    "FunctionParameter" : dict,
+    "FunctionType" : str,
   }
-  my_data = ["Types"]
+  my_data = ["Types", "FunctionParameter", "FunctionType"]
+
+  def __getitem__(self, property_):
+    if property_ == "FunctionParameter":
+      return self.fun_options
+    elif property_ == "FunctionType":
+      return self.fun_type
+    else:
+      return super().__getitem__(property_)
 
   def plot(self):
     """
@@ -102,13 +112,27 @@ class Function(BasePropertiesClass):
     self.data["Points"][:,1] = values
     return
 
+  def resizeXYData(self, n):
+    """
+    Resize the function XY data and fill it with zeros.
+    
+    :param n: New size of the X and Y data array
+    :type n: int
+    """
+    self.data["Points"] = np.zeros((n,2), dtype="f8")
+    return
+
   def __initialize__(self):
-    self.header = self.data["Points"][0]
-    self.tags = [ x[0] for x in self.data["Points"][1:] ]
-    self.data["Points"] = np.array( [ [float(x[1]),float(x[2])] for x in self.data["Points"][1:] ] )
+    if self.data.get("Points") is not None:
+      self.data["Points"] = np.array( [ [float(y) for y in x[1].values()] for x in self.data["Points"] ] )
     options = [ x.split('=') for x in self.data["Function"].split('(')[-1][:-1].split(',') ]
     self.fun_options = {x[0] : x[1] for x in options }
+    self.fun_type = self.data["Function"].split('(')[0]
+    return
   
   def __deinitialize__(self):
-    self.data["Points"] = [self.header] + [ [x,str(y[0]),str(y[1])] for x,y in zip(self.tags,self.data["Points"]) ]
+    if self.data.get("Points") is not None:
+      self.data["Points"] = [
+        ["Point", {"X":str(x), "Y":str(y)}] for x,y in self.data["Points"]
+      ]
     return

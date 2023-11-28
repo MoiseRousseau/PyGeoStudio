@@ -50,7 +50,7 @@ def run_model(xdata,new_log_Ksat):
   Kfunction.setYData(new_Ksat/actual_Ksat * actual_relK)
   # run the analysis
   geofile.save()
-  pgs.run(geofile, analyses_to_solve=["2 - Instantaneous drawdown"])
+  pgs.run(geofile, analyses_to_solve=[instant_drawdown])
   # return fitted data
   T,PWP = instant_drawdown["Results"].getVariablesVsTime("PoreWaterPressure", locations=[[25,2]])
   return PWP
