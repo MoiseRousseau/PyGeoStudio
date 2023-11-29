@@ -26,6 +26,7 @@ autodoc_mock_imports = ['numpy','zipfile','plyfile','prettytable','matplotlib','
 sphinx_gallery_conf = {
      'examples_dirs': '../../examples',   # path to your example scripts
      'gallery_dirs': 'gallery_examples',  # path to where to save gallery generated output
+     'filename_pattern': '/plot_gallery_',
      'nested_sections': False,
 }
 
