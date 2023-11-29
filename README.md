@@ -27,13 +27,16 @@ Getting PyGeoStudio started requires Python and making GeoStudio recognized by P
 
 ## Examples
 
-Examples are provided in the folder `example`. 
+Examples are provided in the folder `examples`. 
 It contains:
 
 * Access the SEEP output of solved analysis and export it for processing with Paraview
 * Making plots with Matplotlib
+* Calibrate some properties
 * Change geometry, and material and reinforcement properties
 * Run parametric study
+
+For more details, see the "Examples" section in the [documentation](https://pygeostudio.readthedocs.io/en/stable/)
 
 
 ## Contributing

@@ -3,6 +3,11 @@ Fit Van Genuchten parameters
 ============================
 """
 
+# %%
+# **This example is not yet working, as fitting Van Genuchten parameter is a complex task.
+# In the present version of the file, we use a gradient descent-like algorithm, which is unsuccessful because the objective function may have multiple local optimum.
+# Therefore, the next step is to use global algorithm such as differential evolution or simuated annealing**
+
 import PyGeoStudio as pgs
 import numpy as np
 
@@ -26,8 +31,7 @@ Tdata, PWPdata = instant_drawdown["Results"].getVariablesVsTime("PoreWaterPressu
 PWPdata += np.random.normal(0.,0.2,len(PWPdata)) #add some noise to measurement with std dev of 0.5 KPa
 
 # %%
-#
-#set the X data 
+# Set the X data
 N = 100 # number of data point
 psi = np.logspace(-1,4,N) #suction from 0.1 to 1000 KPa
 WCfunction.resizeXYData(N)

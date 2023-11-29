@@ -31,7 +31,7 @@ Features
    * - Launch parametric study
      - OK
    * - Launch automatic calibration
-     - TODO
+     - See Examples
    * - Launch sensitivity analysis with true design of experiment
      - TODO
    * - Uncertainty analysis through bayesian framework

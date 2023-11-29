@@ -9,7 +9,7 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name='PyGeoStudio', 
-    version='0.3.0',  # Required
+    version='0.3.1',  # Required
     description='Python library allowing reading/writing GeoStudio .gsz files',
     long_description=long_description,
     long_description_content_type='text/markdown',

@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 project = 'PyGeoStudio'
 copyright = '2023, Moïse Rousseau'
 author = 'Moïse Rouseau'
-release = '0.4.0'
+release = '0.3.1'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

@@ -16,7 +16,7 @@ PyGeoStudio interfaces the GeoStudio file un Python using the main Python class 
 
     import PyGeoStudio as pgs
     src_file = "Reinforcement with Anchors.gsz"
-    geofile = pgs.GeoStudioFile(src_file,mode='r')
+    geofile = pgs.GeoStudioFile(src_file)
 
 The ``GeoStudioFile`` class then parse the study and create a copy in the computer memory that is accessible with Python (the ``geofile`` object in the code block above).
 Therefore, every change made through Python does not affect the input file but rather its representation in the memory.
@@ -32,7 +32,7 @@ It contains numerous attribute, method and subclasses which handle each feature 
 The figure below shows how to access the different feature of a study.
 
 .. figure:: class_overview.png
-   :scale: 60 %
+   :scale: 70 %
    
    Overview of accessing GeoStudio properties through PyGeoStudio
 
@@ -55,8 +55,11 @@ Write back the modified study
 
 .. code-block:: python
 
+    # Overwrite study
+    geofile.save()
+    # Or save in a new file
     out_file = "./rapid_drawdown_changed_perm.gsz"
-    geofile.writeGeoStudioFile(out_file)
+    geofile.saveAs(out_file)
 
 
 Classes description (by alphabetical order)
