@@ -33,6 +33,7 @@ from .Reinforcement import Reinforcement
 from .Mesh import Mesh
 from .Results import Results
 from .Function import Function
+from .Dataset import Dataset
 
 class GeoStudioFile:
   """
@@ -47,6 +48,7 @@ class GeoStudioFile:
     self.meshes = []
     self.analyses = []
     self.contexts = []
+    self.datasets = []
     self.materials = []
     self.reinforcements = []
     self.xml_items = []
@@ -111,6 +113,9 @@ class GeoStudioFile:
       elif element.tag == "Functions":
         self.__readFunctions__(element)
         self.xml_items.append("Functions")
+      elif element.tag == "DataSets":
+        self.__readDataSets__(element)
+        self.xml_items.append("DataSets")
       else:
         #store the item for the write method
         self.xml_items.append(element)
@@ -214,6 +219,20 @@ class GeoStudioFile:
     if current: current.pop()
     return
 
+  def __readDataSets__(self, element):
+    self.n_datasets = int(element.attrib["Len"])
+    for i in range(self.n_datasets):
+      dataset_ = element[i]
+      new_dataset = Dataset(dataset_, self.f_src)
+      self.datasets.append(new_dataset)
+    return
+
+  def __getXByName_internal__(self, data, data_name, name):
+    for x in data:
+      if x["Name"] == name:
+        return x
+    raise ValueError(f"{data_name} {name} not found in file.")
+
   def showAnalysisTree(self):
     """
     Print the analysis tree in the GeoStudio file with analysis ID, name and parent ID if defined.
@@ -236,10 +255,7 @@ class GeoStudioFile:
     :return: The analysis with the given name.
     :rtype: Analysis object
     """
-    for analysis in self.analyses:
-      if analysis["Name"] == name:
-        return analysis
-    raise ValueError(f"Analysis {name} not found in file.")
+    return self.__getXByName_internal__(self.analyses, "Analysis", name)
 
   def getAnalysisByID(self, ID):
     """
@@ -394,6 +410,27 @@ class GeoStudioFile:
     raise ValueError(f"No function nammed {name} in file.")
     return
 
+  def showDatasets(self):
+    """
+    Print a table showing the dataset defined within the GeoStudio file.
+    """
+    res = PrettyTable()
+    res.field_names = ["ID","Dataset","Parameters"]
+    l = self.datasets
+    for dataset in self.datasets:
+      res.add_row([dataset['ID'], dataset['Name'],dataset['Parameters']])
+    print(res)
+    return
+
+  def getDatasetByName(self, name):
+    """
+    Return the dataset corresponding to the name given.
+    
+    :param name: Name of the dataset
+    :type name: str
+    """
+    return self.__getXByName_internal__(self.datasets, "Dataset", name)
+
   def genConfigurationFile(self):
     """
     Generate the main xml file and return it as a string
@@ -446,6 +483,12 @@ class GeoStudioFile:
       elif element == "Functions":
         sub = ET.SubElement(out_root, "Functions")
         self.__writeFunctions__(self.functions, sub)
+      elif element == "DataSets":
+        sub = ET.SubElement(out_root, "DataSets")
+        sub.attrib = {"Len":str(len(self.datasets))}
+        for dataset in self.datasets:
+          sub_data = ET.SubElement(sub, "DataSet")
+          dataset.__write__(sub_data)
       else:
         #store the item for the write method
         out_root.append(element)
