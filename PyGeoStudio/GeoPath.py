@@ -1,1 +1,1 @@
-geopath = "C:/Program Files/Seequent/GeoStudio 2023.1"
+geopath = "C:\Program Files\Seequent\GeoStudio 2023.1"

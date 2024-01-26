@@ -50,7 +50,7 @@ def run(geofile, analyses_to_solve=None, shell=True):
     analyses_to_solve_name = [x["Name"] for x in analyses_to_solve]
   else:
     analyses_to_solve_name = []
-  cmd = [geopath + "/Bin/GeoCmd.exe", geofile] + analyses_to_solve_name + ["/solve"]
+  cmd = [geopath + "\Bin\GeoCmd.exe", geofile] + analyses_to_solve_name + ["/solve"]
   print("#################################")
   print("Calling GeoStudio solver")
   ret_code = subprocess.run(cmd, shell=shell)
