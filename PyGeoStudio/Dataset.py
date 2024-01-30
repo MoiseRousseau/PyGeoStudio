@@ -21,8 +21,11 @@ import xml.etree.ElementTree as ET
 import zipfile
 
 class DatasetParameters:
-  def __init__(self, prop):
-    self.params = [param.text for param in prop]
+  def __init__(self, prop=None):
+    if prop is None:
+      self.params = []
+    else:
+      self.params = [param.text for param in prop]
     return
 
   def __write__(self, et):
@@ -75,13 +78,14 @@ class Dataset(BasePropertiesClass):
     "WaterFlux" : "m3",
   }
 
-  def __init__(self, prop, f_src):
+  def __init__(self, prop=None, f_src=None):
     super().__init__(prop)
-    src = zipfile.ZipFile(f_src)
-    res = src.open(f"dataset_{self.data['CsvID']}.csv", 'r')
-    self.data["Data"] = np.genfromtxt(res, delimiter=',', skip_header=1)[:,1:]
-    res.close()
-    src.close()
+    if f_src is not None:
+      src = zipfile.ZipFile(f_src)
+      res = src.open(f"dataset_{self.data['CsvID']}.csv", 'r')
+      self.data["Data"] = np.genfromtxt(res, delimiter=',', skip_header=1)[:,1:]
+      res.close()
+      src.close()
     return
 
   def loadDataFromCSV(self, path, delimiter=",", comments="#"):
@@ -93,15 +97,18 @@ class Dataset(BasePropertiesClass):
     """
     self.data["FilePath"] = path
     self.data["Data"] = np.genfromtxt(path,comments=comments, delimiter=delimiter)
-    self.data["NumRows"] = self.data["Data"].shape[0]
+    self.data["NumRows"] = str(self.data["Data"].shape[0])
     return
 
   def loadDataFromArray(self, arr):
     """
     Load data from the given array
+    
+    :param arr: the array
+    :type arr: nunmpy array
     """
     self.data["Data"] = arr
-    self.data["NumRows"] = arr.shape[0]
+    self.data["NumRows"] = str(arr.shape[0])
     return
 
   def setDataParameters(self, params):
@@ -111,18 +118,28 @@ class Dataset(BasePropertiesClass):
     :param params: List of the parameter name. Must match the available dataset parameter in GeoStudio: {self.dataset_parameters.keys()}
     :type params: list
     """
-    if len(params) != self.data.shape[1]:
-      raise ValueError("The list of parameter and number of column in the dataset should have the same length")
+#    if len(params) != self.data["Data"].shape[1]:
+#      raise ValueError("The list of parameter and number of column in the dataset should have the same length")
     for param in params:
       if param not in self.dataset_parameters.keys():
-        raise ValueError(f"Parameter dataset {param} not recognized, must be one of {dataset_parameters.keys()}")
-    self.data["Parameters"].params = params
+        raise ValueError(f"Parameter dataset {param} not recognized, must be one of {self.dataset_parameters.keys()}")
+    self["Parameters"]= DatasetParameters()
+    self["Parameters"].params = params
     return
     
   def __str__(self):
     res = f"Dataset {self.data['Name']}\n"
     for i,x in enumerate(self.data["Parameters"]):
       res += f"Column {i}: {x} ({self.dataset_parameters[x]})\n"
-    res += self.data["Data"].__str__()
+    if "Data" in self.data.keys():
+      res += self.data["Data"].__str__()
+    else:
+      res += "No data in this dataset"
     return res
+
+  def getData(self):
+    """
+    Return the data stored in the dataset
+    """
+    return self.data["Data"]
 

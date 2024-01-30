@@ -33,10 +33,11 @@ class BasePropertiesClass:
   """
   parameter_type = {}
   my_data = []
-  def __init__(self, prop):
+  def __init__(self, prop=None):
     self.data = {}
     self.other_elem = []
-    self.read(prop)
+    if prop is not None:
+      self.read(prop)
     return
 
   def __str__(self):
@@ -57,7 +58,10 @@ class BasePropertiesClass:
     if property_ not in self.data.keys():
       if property_ not in self.parameter_type.keys():
         raise ValueError(f"Property {property_} not defined in PyGeoStudio. If you feel this is an error, please contact for assistance.")
-    self.data[property_] = str(val)
+    if self.parameter_type[property_] not in [dict, int, str, float, bool]:
+      self.data[property_] = val
+    else:
+      self.data[property_] = str(val)
     return
 
   def __getitem__(self, property_):

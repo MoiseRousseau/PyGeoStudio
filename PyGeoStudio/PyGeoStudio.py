@@ -33,7 +33,7 @@ from .Reinforcement import Reinforcement
 from .Mesh import Mesh
 from .Results import Results
 from .Function import Function
-from .Dataset import Dataset
+from .Dataset import Dataset, DatasetParameters
 
 class GeoStudioFile:
   """
@@ -431,6 +431,23 @@ class GeoStudioFile:
     """
     return self.__getXByName_internal__(self.datasets, "Dataset", name)
 
+  def createNewDataset(self, name, parameters):
+    """
+    Create a new dataset
+    
+    :param name: Name of the new dataset
+    :type name: str
+    :param params: List of the parameter name. Must match the available dataset parameter in GeoStudio: {self.dataset_parameters.keys()}
+    :type params: list
+    """
+    dataset = Dataset()
+    dataset["Name"] = name
+    dataset["ID"] = max([x["ID"] for x in self.datasets])+1
+    dataset["CsvID"] = max([x["CsvID"] for x in self.datasets])+1
+    dataset.setDataParameters(parameters)
+    self.datasets.append(dataset)
+    return dataset
+
   def genConfigurationFile(self):
     """
     Generate the main xml file and return it as a string
@@ -529,29 +546,21 @@ class GeoStudioFile:
     # zipfile can't overwrite file.
     # So we must write the modified study in a BytesIO then overwrite the results
     temp_space = io.BytesIO()
-    zip_mem = zipfile.ZipFile(temp_space, 'a') #temp zip in memory
-    zip_src = zipfile.ZipFile(self.f_src, 'r') #source geostudio zip
-    for f in zip_src.namelist():
-      if f == prefix + ".xml": #main xml file
-        main_xml_str = self.genConfigurationFile()
-        zip_mem.writestr(prefix + ".xml", data=main_xml_str)
-      #TODO: other file
-      else:
-        zip_mem.writestr(f, data=zip_src.read(f))
-    zip_src.close()
+    self.saveAs(temp_space)
     # overwrite current study
+    zip_mem = zipfile.ZipFile(temp_space, 'r') #temp zip in memory
     zip_out = zipfile.ZipFile(
       self.f_src, 'w',
       compression=zipfile.ZIP_DEFLATED,
       compresslevel=5,
     )
     for f in zip_mem.namelist():
-        zip_out.writestr(f, data=zip_mem.read(f))
+      zip_out.writestr(f, data=zip_mem.read(f))
     zip_mem.close()
     zip_out.close()
     return
 
-  def saveAs(self, f_out, compresslevel=3):
+  def saveAs(self, f_out, compresslevel=5):
     """
     Write the (modified) study under a new file. Note the results are not copied to the new study.
     
@@ -560,25 +569,46 @@ class GeoStudioFile:
     :param compresslevel: Level of compression of the output file from 0 (uncompressed) to 9 (fully compressed) (optional, default=1)
     :type compresslevel: int
     """
-    # create output
-    if f_out == self.f_src:
-      raise ValueError("The new file has the same name than the input file. Please write within another file or use the save() method")
-    ext = f_out.split('.')[-1]
-    if ext != "gsz":
-      f_out += ".gsz"
-    prefix = f_out.split('/')[-1][:-4]
-    zip_out = zipfile.ZipFile(
-      f_out, mode="w",
-      compression=zipfile.ZIP_DEFLATED,
-      compresslevel=compresslevel
-    )
+    if isinstance(f_out, io.BytesIO):
+      zip_out = zipfile.ZipFile(temp_space, 'a')
+    else:
+      # create output
+      if f_out == self.f_src:
+        raise ValueError("The new file has the same name than the input file. Please write within another file or use the save() method")
+      ext = f_out.split('.')[-1]
+      if ext != "gsz":
+        f_out += ".gsz"
+      prefix = f_out.split('/')[-1][:-4]
+      zip_out = zipfile.ZipFile(
+        f_out, mode="w",
+        compression=zipfile.ZIP_DEFLATED,
+        compresslevel=compresslevel
+      )
     # Write
     src_prefix = self.f_src.split('/')[-1][:-4]
     zip_src = zipfile.ZipFile(self.f_src, 'r') #source geostudio zip
+    for dataset in self.datasets:
+      dataset_out = zip_out.open(f"dataset_{dataset['CsvID']}.csv", 'w')
+      arr = dataset.getData()
+      np.savetxt(
+        dataset_out,
+        np.append(
+          np.arange(1,arr.shape[0]+1)[:,None],
+          arr,
+          axis=1,
+        ),
+        delimiter=',',
+        header = "Undefined," + ','.join(dataset["Parameters"]),
+        fmt = ["%i"] + ["%.6e" for x in dataset["Parameters"]],
+        comments = "",
+      )
+      dataset_out.close()
     for f in zip_src.namelist():
       if f == src_prefix + ".xml": #main xml file
         main_xml_str = self.genConfigurationFile()
         zip_out.writestr(prefix + ".xml", data=main_xml_str)
+      elif ".csv" in f and "dataset" in f:
+        continue
       #TODO: meshes
       else:
         zip_out.writestr(f, data=zip_src.read(f))
@@ -590,6 +620,7 @@ class GeoStudioFile:
 #      mesh.write(byte_str)
 #      mesh_name = "mesh_" + str(mesh.mesh_id) + ".ply"
 #      zip_out.writestr(mesh_name, data=byte_str.getvalue())
-    print(f"GeoStudio study successfully written in {f_out}")
+    if not isinstance(f_out, io.BytesIO):
+      print(f"GeoStudio study successfully written in {f_out}")
     return
 

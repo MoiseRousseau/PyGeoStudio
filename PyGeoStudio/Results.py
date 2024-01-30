@@ -18,8 +18,6 @@
 import numpy as np
 import zipfile
 
-from .BasePropertiesClass import BasePropertiesClass
-
 class Results:
   def __init__(self, f_src, analysis, mesh=None):
     self.f_src = f_src
