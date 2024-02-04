@@ -18,6 +18,7 @@
 import numpy as np
 import xml.etree.ElementTree as ET
 import matplotlib.pyplot as plt
+from prettytable import PrettyTable
 
 from .BasePropertiesClass import BasePropertiesClass
 from .Results import Results
@@ -30,12 +31,29 @@ from .Results import Results
 class TimeIncrements(BasePropertiesClass):
   """
   TimeIncrement holds the time for which the simulation results must be saved
+  
+  :param Start: Starting time of the simulation
+  :type Start: float
+  :param Duration: Duration of the simulation
+  :type Duration: float
+  :param IncrementOption: `Exponential` or `Linear` timesteps
+  :type IncrementOption: str
+  :param IncrementCount: Number of timesteps
+  :type IncrementCount: int
+  :param InitialIncrementSize: If `Exponential`, size of the first increment
+  :type InitialIncrementSize: float
+  :param SaveMultiplesOf: Saving each timestep
+  :type SaveMultiplesOf: int
+  :param TimeSteps: Timesteps dictionnary
+  :type TimeSteps: dict
   """
   parameter_type = {
+    "Start" : float,
     "Duration" : float, #total duration of the simulation
     "IncrementOption" : str, #Exponential
     "IncrementCount" : int,
     "InitialIncrementSize" : float,
+    "SaveMultiplesOf" : int,
     "TimeSteps" : list,
   }
   
@@ -69,9 +87,69 @@ class TimeIncrements(BasePropertiesClass):
       sub = ET.SubElement(et, tag)
       sub.text = val
     return
+
+  def showTimeSteps(self):
+    """
+    Print a pretty looking table showing simulation timestepping.
+    """
+    res = PrettyTable()
+    res.field_names = ["ID", "Step size","Time","Saved"]
+    res.add_row(["0", "", "0", ""])
+    for i,x in enumerate(self.data["TimeSteps"]):
+      res.add_row([
+        str(i+1),
+        x['Step'],
+        x['ElapsedTime'],
+        str(x.get('Save',"false")),
+      ])
+    print(res)
+    return
   
   def getSavedTimeStep(self):
-    return [x["ElapsedTime"] for x in self.data["TimeSteps"] if x["Save"]]
+    """
+    Return the list of saved timesteps
+    """
+    return [float(x["ElapsedTime"]) for x in self.data["TimeSteps"] if x["Save"]]
+
+  def getTimeStep(self):
+    """
+    Return the list of all timesteps
+    """
+    return [float(x["ElapsedTime"]) for x in self.data["TimeSteps"]]
+
+  def setTimeSteps(self, timesteps, saved):
+    """
+    Set simulation timestep
+    
+    :param timesteps: Timestep times. Can be unsorted. Must NOT include the starting time.
+    :type timesteps: list
+    :param saved: If true, the timestep will be saved in simulation
+    :type saved: list (same size as `timesteps`)
+    """
+    if len(timesteps) != len(saved):
+      raise ValueError("timestep and saved parameter must be of the same size")
+    indices = np.argsort(timesteps)
+    timesteps_ = np.array(timesteps)[indices]
+    saved_ = np.array(saved)[indices]
+    start = self.data.get("Start", 0)
+    res = []
+    temp = {
+      "Step" : str(timesteps_[0]-start),
+      "ElapsedTime" : str(timesteps_[0]),
+    }
+    if saved_[0]: temp["Save"] = "true"
+    res.append(temp)
+    for i in range(1, len(timesteps)):
+      temp = {
+        "Step" : str(timesteps_[i]-timesteps_[i-1]),
+        "ElapsedTime" : str(timesteps_[i]),
+      }
+      if saved_[i]: temp["Save"] = "true"
+      res.append(temp)
+    self.data["IncrementCount"] = str(len(timesteps))
+    self.data["TimeSteps"] = res
+    return
+
 
 
 class Analysis(BasePropertiesClass):
