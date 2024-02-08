@@ -70,7 +70,7 @@ class Results:
     except:
       raise ValueError(f"Output variables \"{variable}\" not found in file. Available output variables are: {self.getOutputVariables()}")
     src = zipfile.ZipFile(self.f_src)
-    t_index = [x[1] for x in self.saved_time].index(time)
+    t_index = self.saved_time[[x[1] for x in self.saved_time].index(time)][0]
     f = src.open(f"{self.analysis_name.replace('/','&3')}/{t_index:0>3d}/node.csv")
     data = np.genfromtxt(f, delimiter=',', skip_header=1)[:,variable_index] #remove point id
     f.close()
@@ -155,6 +155,5 @@ class Results:
       for timestep in self.saved_time:
         t = timestep[0]
         point_data = {variable:self.getSnapshot(variable, t) for variable in self.getOutputVariables()}
-        print(point_data["Node"][20], point_data["PoreWaterPressure"][20])
         writer.write_data(t, point_data=point_data)
     return
