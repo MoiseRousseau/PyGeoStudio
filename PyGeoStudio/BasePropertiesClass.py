@@ -75,6 +75,8 @@ class BasePropertiesClass:
           return func(self.data[property_])
         else: #returned the PyGeoStudio object
           return self.data[property_]
+      elif property_ in self.my_data:
+        return self.data[property_]
       else: #not handled
         warnings.warn(f"Property {property_} defined but not officially handled by PyGeoStudio.\nReturn property non-interpreted as a string. Please contact for assistance.", UserWarning)
         return self.data[property_]
