@@ -119,6 +119,30 @@ class MaterialHydraulicFunction(BasePropertiesClass):
     sub.attrib = {x:y for x,y in self.data.items() if x not in self.my_data}
     return
 
+class MaterialThermalFunction(BasePropertiesClass):
+  """
+  TODO
+  """
+  parameter_type = {
+    "KFnNum" : int,
+    "KFnTempNum" : int,
+    "UnfrozenWCFnNum" : int,
+    "VolSpecHeatFnNum" : int,
+    "FrozenSpecHeat" : float,
+    "UnfrozenSpecHeat" : float,
+    "WaterContent" :float,
+    "KFrozen" : float,
+    "KUnfrozen" : float,
+  }
+
+  def read(self, et):
+    self.data = dict(et.attrib)
+    return
+
+  def __write__(self, sub):
+    sub.attrib = {x:y for x,y in self.data.items() if x not in self.my_data}
+    return
+
 
 class Material(BasePropertiesClass):
   """
@@ -138,6 +162,8 @@ class Material(BasePropertiesClass):
   :type Hydraulic: MaterialHydraulicFunction object
   :param StressStrain: Geotechnical properties of the material. This is an instance of MaterialStressStrain class.
   :type StressStrain: MaterialStressStrain object
+  :param Thermal: Thermal properties of the material. This is an instance of MaterialThermalFunction class.
+  :type Thermal: MaterialThermalFunction object
   """
   parameter_type = {
     "ID" : int,
@@ -148,6 +174,7 @@ class Material(BasePropertiesClass):
     "StressModel" : str,
     "Hydraulic" : MaterialHydraulicFunction,
     "StressStrain" : MaterialStressStrain,
+    "Thermal" : MaterialThermalFunction,
   }
 
   def __str__(self):

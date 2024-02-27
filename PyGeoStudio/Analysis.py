@@ -180,6 +180,8 @@ class Analysis(BasePropertiesClass):
   :type TimeIncrements: TimeIncrements object
   :param ComputedPhysics:
   :type ComputedPhysics: dict
+  :param PhysicsOptions:
+  :type PhysicsOptions: dict
   """
   parameter_type = {
     "ID" : int,
@@ -195,6 +197,7 @@ class Analysis(BasePropertiesClass):
     "Results": Results,
     "TimeIncrements" : TimeIncrements,
     "ComputedPhysics" : dict,
+    "PhysicsOptions" : dict,
 #      "ConvergenceCriteria" : None,
 #      "IterationControls" : None,
 #      "UnderRelaxationCriteria" : None,
