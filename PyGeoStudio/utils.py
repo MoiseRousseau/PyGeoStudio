@@ -16,6 +16,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import subprocess
+import os, pathlib
 import PyGeoStudio
 from .GeoPath import geopath
 
@@ -26,11 +27,12 @@ def defineGeoStudioLauncher(path):
   :param path: Path to GeoStudio installation
   :type path: str
   """
-  base_dir = "/".join(PyGeoStudio.__file__.split("/")[:-1])
-  out = open(base_dir+"/GeoPath.py",'w')
-  out.write(f"geopath = \"{path.rstrip()}\"")
+  base_dir = os.path.dirname(PyGeoStudio.__file__)
+  out = open(os.path.join(base_dir, "GeoPath.py"),'w')
+  s = str(pathlib.PureWindowsPath(path.rstrip()))
+  out.write(f"geopath = \"{s}\"")
   out.close()
-  testLauncher(path.rstrip())
+  testLauncher(s)
   return
 
 def run(geofile, analyses_to_solve=None, shell=True):
@@ -50,7 +52,7 @@ def run(geofile, analyses_to_solve=None, shell=True):
     analyses_to_solve_name = [x["Name"] for x in analyses_to_solve]
   else:
     analyses_to_solve_name = []
-  cmd = [geopath + "\Bin\GeoCmd.exe", geofile] + analyses_to_solve_name + ["/solve"]
+  cmd = [geopath + "\\Bin\\GeoCmd.exe", geofile] + analyses_to_solve_name + ["/solve"]
   print("#################################")
   print("Calling GeoStudio solver")
   ret_code = subprocess.run(cmd, shell=shell)
@@ -60,10 +62,11 @@ def run(geofile, analyses_to_solve=None, shell=True):
 
 def testLauncher(path=None):
   if path is None: path = geopath
-  cmd = [path + "/Bin/GeoCmd.exe"]
-  ret_code = subprocess.run(cmd, shell=True).returncode
-  if ret_code != 0:
-    raise ValueError("Can't find GeoStudio executables with the path provided. Please correct the path and redefine it with defineGeoStudioLauncher() method")
-  else:
+  cmd = [path + "\\Bin\\GeoCmd.exe", "/?"]
+  output = subprocess.run(cmd, check=False, stdout=subprocess.PIPE).stdout.decode()
+  if "GeoCmd" in output and "Copyright" in output:
+    print("GeoStudio version:" + output.split("\n")[0].split("version")[-1])
     print("Successfully tested GeoStudio executable")
+  else:
+    raise ValueError("Can't find GeoStudio executables with the path provided. Please correct the path and redefine it with defineGeoStudioLauncher() method")
   return
