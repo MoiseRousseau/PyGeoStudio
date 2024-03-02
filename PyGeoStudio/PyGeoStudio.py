@@ -570,7 +570,8 @@ class GeoStudioFile:
     :type compresslevel: int
     """
     if isinstance(f_out, io.BytesIO):
-      zip_out = zipfile.ZipFile(temp_space, 'a')
+      zip_out = zipfile.ZipFile(f_out, 'a')
+      prefix = self.f_src.split('/')[-1][:-4]
     else:
       # create output
       if f_out == self.f_src:

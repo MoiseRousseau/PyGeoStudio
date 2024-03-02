@@ -21,7 +21,7 @@ import PyGeoStudio as pgs
 import numpy as np
 
 src_file = "../GeoStudio_files/Rapid drawdown.gsz"
-copy_file = '.'.join(src_file.split('.')[:-1]) + "_tmp.gsz"
+copy_file = "Rapid drawdown_tmp.gsz"
 geofile_src = pgs.GeoStudioFile(src_file)
 geofile_src.saveAs(copy_file)
 
