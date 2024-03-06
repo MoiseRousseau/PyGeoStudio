@@ -26,6 +26,8 @@ class Results:
     self.saved_time = None
     if self.analysis["Method"] == "Transient":
       self.saved_time = tuple((i+1,float(x["ElapsedTime"])) for i,x in enumerate(analysis["TimeIncrements"]["TimeSteps"]) if x.get("Save"))
+    else: #Steady State simulation
+      self.saved_time = [(1,1e40)]
     self.mesh = mesh
     return
 
@@ -153,7 +155,7 @@ class Results:
     with meshio.xdmf.TimeSeriesWriter(path) as writer:
       writer.write_points_cells(points, cells)
       for timestep in self.saved_time:
-        t = timestep[0]
+        t = timestep[1]
         point_data = {variable:self.getSnapshot(variable, t) for variable in self.getOutputVariables()}
         writer.write_data(t, point_data=point_data)
     return
