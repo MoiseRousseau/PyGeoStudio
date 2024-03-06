@@ -59,6 +59,7 @@ def run_model(xdata,new_log_Ksat):
 # Calibrate and print results:
 from scipy.optimize import curve_fit
 initial_guess_log = -7
+initial_PWP = run_model(None,initial_guess_log) #Run model to get non-calibrated results
 popt, pcov, info_dict, mesg, ier = curve_fit(
   run_model, Tdata, PWPdata, p0=initial_guess_log, full_output=True
 )
@@ -76,6 +77,7 @@ T,PWP = instant_drawdown["Results"].getVariablesVsTime("PoreWaterPressure", loca
 import matplotlib.pyplot as plt
 fig,ax = plt.subplots()
 ax.scatter(Tdata, PWPdata, color="k", label=f"Noisy experimental data")
+ax.plot(Tdata, initial_PWP, color='b', label="Initial guess (K=1e-7 m/s)")
 ax.plot(Tdata, PWP, color="r", label=f"Calibrated model")
 ax.grid()
 ax.legend()
