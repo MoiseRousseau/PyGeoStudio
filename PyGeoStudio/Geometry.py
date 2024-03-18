@@ -48,13 +48,14 @@ class Geometry:
     return
   
   def __getitem__(self, parameter):
-    match parameter:
-      case "Points": return self.points
-      case "Lines": return self.lines
-      case "Regions": return self.regions
-      case "MeshId": return None if self.mesh_id is None else int(self.mesh_id)
-      case "Mesh": return self.mesh
-      case "Name": return self.name
+    if parameter == "Points": return self.points
+    elif parameter == "Lines": return self.lines
+    elif parameter == "Regions": return self.regions
+    elif parameter == "MeshId": return None if self.mesh_id is None else int(self.mesh_id)
+    elif parameter == "Mesh": return self.mesh
+    elif parameter == "Name": return self.name
+    else:
+      raise KeyError(f"There is no item \"{parameter}\" accessible through Geometry class")
     return
   
   def draw(self, show=True):

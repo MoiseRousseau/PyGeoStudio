@@ -68,22 +68,21 @@ class Context(BasePropertiesClass):
   def __write__(self, et):
     #analysis ID
     for tag,val in self.data.items():
-      match tag:
-        case "GeometryUsesMaterials":
+      if tag == "GeometryUsesMaterials":
           sub = ET.SubElement(et, tag)
           sub.attrib = {"Len" : str(len(self.data[tag]))}
           for reg, mat_id in self.data["GeometryUsesMaterials"].items():
             sub_gum = ET.SubElement(sub, "GeometryUsesMaterial")
             sub_gum.attrib["ID"] = reg
             sub_gum.attrib["Entry"] = str(mat_id)
-        case "GeometryUsesHydraulicBCs":
+      elif tag == "GeometryUsesHydraulicBCs":
           sub = ET.SubElement(et, tag)
           sub.attrib = {"Len" : str(len(self.data[tag]))}
           for reg, mat_id in self.data["GeometryUsesHydraulicBCs"].items():
             sub_gum = ET.SubElement(sub, "GeometryUsesHydraulicBCs")
             sub_gum.attrib["ID"] = reg
             sub_gum.attrib["Entry"] = str(mat_id)
-        case _:
-          sub = ET.SubElement(et, tag)
-          sub.text = val
+      else:
+        sub = ET.SubElement(et, tag)
+        sub.text = val
     return

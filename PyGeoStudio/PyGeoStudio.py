@@ -69,13 +69,12 @@ class GeoStudioFile:
     return
 
   def __getitem__(self, item):
-    match item:
-      case "Analyses": return self.analyses
-      case "Materials": return self.materials
-      case "Reinforcements": return self.reinforcements
-      case "Functions": return self.__functionToList__(self.functions)
-      case _:
-        raise ValueError(f"No accessible item of name {item} through PyGeoStudio interface")
+    if item == "Analyses": return self.analyses
+    elif item == "Materials": return self.materials
+    elif item == "Reinforcements": return self.reinforcements
+    elif item == "Functions": return self.__functionToList__(self.functions)
+    else:
+      raise KeyError(f"There is no item \"{item}\" accessible through PyGeoStudio class")
 
   def initialize(self):
     """
