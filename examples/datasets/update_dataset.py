@@ -34,7 +34,7 @@ print("\nNew dataset: ", new_dataset)
 
 # %%
 # Or by reading a file
-csv_dataset = geofile.createNewDataset("MyNewDataset",["Time","WaterFlux"])
+csv_dataset = geofile.createNewDataset("MyNewCSVDataset",["Time","WaterFlux"])
 csv_dataset.loadDataFromCSV("./adataset.csv")
 print("\nCSV dataset: ", csv_dataset)
 geofile.saveAs("modified_datasets.gsz")

@@ -88,7 +88,7 @@ class GeoStudioFile:
     #parse geoslope input
     self.prefix = self.f_src.split('/')[-1][:-4]
     try:
-      self.main_xml = ET.parse(src.open(prefix+'.xml'))
+      self.main_xml = ET.parse(src.open(self.prefix+'.xml'))
     except:
       #search for an xml file
       file_list = src.infolist()

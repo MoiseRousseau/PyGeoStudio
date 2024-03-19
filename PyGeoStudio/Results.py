@@ -74,10 +74,15 @@ class Results:
     src = zipfile.ZipFile(self.f_src)
     t_index = self.saved_time[[x[1] for x in self.saved_time].index(time)][0]
     f = src.open(f"{self.analysis_name.replace('/','&3')}/{t_index:0>3d}/node.csv")
-    data = np.genfromtxt(f, delimiter=',', skip_header=1)[:,variable_index] #remove point id
+    data = np.genfromtxt(f, delimiter=',', skip_header=1)
+    if len(data) != len(self.mesh.vertices):
+      data_ = np.zeros(len(self.mesh.vertices)) + np.nan
+      data_[data[:,0].astype('i8')-1] = data[:,variable_index]
+    else:
+      data_ = data[:,variable_index]
     f.close()
     src.close()
-    return data
+    return data_
     
   def getVariablesVsTime(self, variable, locations):
     """
