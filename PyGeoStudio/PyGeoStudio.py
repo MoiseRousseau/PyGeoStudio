@@ -86,8 +86,23 @@ class GeoStudioFile:
     else:
       raise IOError(f"File {self.f_src} doesn't exist in the current directory")
     #parse geoslope input
-    prefix = self.f_src.split('/')[-1][:-4]
-    self.main_xml = ET.parse(src.open(prefix+'.xml'))
+    self.prefix = self.f_src.split('/')[-1][:-4]
+    try:
+      self.main_xml = ET.parse(src.open(prefix+'.xml'))
+    except:
+      #search for an xml file
+      file_list = src.infolist()
+      found = False
+      for f in file_list:
+        f = f.filename
+        if f.split('.')[-1] == "xml":
+          found = True
+          break
+      if not found:
+        raise IOError(f"There is no xml configuration file in archive {self.f_src}. Is this a GeoStudio study ?")
+      warnings.warn(f"Unable to find GeoStudio configuration file \"{self.prefix}.xml\", but a configuration file named {f} was found. We will continue with this file. We recommand not renaming GeoStudio study.")
+      self.main_xml = ET.parse(src.open(f))
+      self.prefix = '.'.join(f.split('/')[-1].split('.')[:-1])
     root = self.main_xml.getroot()
     for element in root:
       if element.tag == "FileInfo":
@@ -541,7 +556,6 @@ class GeoStudioFile:
     """
     Save the modification made by PyGeoStudio to the current GeoStudio file.
     """
-    prefix = self.f_src.split('/')[-1][:-4]
     # zipfile can't overwrite file.
     # So we must write the modified study in a BytesIO then overwrite the results
     temp_space = io.BytesIO()
@@ -569,6 +583,7 @@ class GeoStudioFile:
     :type compresslevel: int
     """
     if isinstance(f_out, io.BytesIO):
+      # if BytesIO, this mean save() method
       zip_out = zipfile.ZipFile(f_out, 'a')
       prefix = self.f_src.split('/')[-1][:-4]
     else:
@@ -585,7 +600,6 @@ class GeoStudioFile:
         compresslevel=compresslevel
       )
     # Write
-    src_prefix = self.f_src.split('/')[-1][:-4]
     zip_src = zipfile.ZipFile(self.f_src, 'r') #source geostudio zip
     for dataset in self.datasets:
       dataset_out = zip_out.open(f"dataset_{dataset['CsvID']}.csv", 'w')
@@ -604,9 +618,9 @@ class GeoStudioFile:
       )
       dataset_out.close()
     for f in zip_src.namelist():
-      if f == src_prefix + ".xml": #main xml file
+      if f.split('.')[-1] == "xml": #main xml file
         main_xml_str = self.genConfigurationFile()
-        zip_out.writestr(prefix + ".xml", data=main_xml_str)
+        zip_out.writestr(f.replace(self.prefix,prefix), data=main_xml_str)
       elif ".csv" in f and "dataset" in f:
         continue
       #TODO: meshes
