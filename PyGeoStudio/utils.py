@@ -16,24 +16,36 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import subprocess
-import os, pathlib
+import os, pathlib, sys
 import PyGeoStudio
-from .GeoPath import geopath
 
-def defineGeoStudioLauncher(path):
+
+def getGeoStudioVersion():
   """
-  Specify the path to GeoStudio installation to interac with the software (default set to ``C:\Program Files\Seequent\GeoStudio 2023.1``)
-  
-  :param path: Path to GeoStudio installation
-  :type path: str
-  """
-  base_dir = os.path.dirname(PyGeoStudio.__file__)
-  out = open(os.path.join(base_dir, "GeoPath.py"),'w')
-  s = str(pathlib.PureWindowsPath(path.rstrip()))
-  out.write(f"geopath = \"{s}\"")
-  out.close()
-  testLauncher(s)
-  return
+  Test if PyGeoStudio is able to launch GeoStudio. GeoStudio executables should be on the system path.
+  By default, the path ``C:\Program Files\Seequent\GeoStudio 20XX,Y`` are appended, so it directly finds the lastest GeoStudio version if not found in system path.
+  """mmon_path = [
+    "C:/Program Files/Seequent/GeoStudio 2024.2/Bin/",
+    "C:/Program Files/Seequent/GeoStudio 2024.1/Bin/",
+    "C:/Program Files/Seequent/GeoStudio 2023.1/Bin/",
+    "C:/Program Files/Seequent/GeoStudio 2022.1/Bin/",
+    "C:/Program Files/Seequent/GeoStudio 2021.4/Bin/",
+    "C:/Program Files/Seequent/GeoStudio 2021.3/Bin/",
+    "C:/Program Files/Seequent/GeoStudio 2021 R2/Bin/",
+    "C:/Program Files/Seequent/GeoStudio 2021/Bin/",
+  ]
+  common_path = [str(pathlib.PureWindowsPath(x)) for x in common_path]
+  os.environ["PATH"] += os.pathsep + os.pathsep.join(common_path)
+  cmd = ["GeoCmd.exe", "/?"]
+  error_message = "Error running GeoStudio. Please correct the path, restart Python and retry."
+  try:
+    output = None
+    output = subprocess.run(cmd, check=False, stdout=subprocess.PIPE).stdout.decode()
+    version = output.split("\n")[0].split("version")[-1].strip()
+  except:
+    print(output)
+    raise ValueError(error_message)
+  return version
 
 def run(geofile, analyses_to_solve=None, shell=True, check_output=True):
   """
@@ -54,7 +66,7 @@ def run(geofile, analyses_to_solve=None, shell=True, check_output=True):
     analyses_to_solve_name = [x["Name"] for x in analyses_to_solve]
   else:
     analyses_to_solve_name = []
-  cmd = [geopath + "\\Bin\\GeoCmd.exe", geofile] + analyses_to_solve_name + ["/solve"]
+  cmd = ["GeoCmd.exe", geofile] + analyses_to_solve_name + ["/solve"]
   print("#################################")
   print("Calling GeoStudio solver")
   cmd_out = subprocess.run(cmd, shell=shell)
@@ -63,18 +75,3 @@ def run(geofile, analyses_to_solve=None, shell=True, check_output=True):
     raise RuntimeError(message)
   print("#################################")
   return cmd_out.returncode
-
-def testLauncher(path=None):
-  if path is None: path = geopath
-  cmd = [path + "\\Bin\\GeoCmd.exe", "/?"]
-  error_message = "Can't find GeoStudio executables with the path provided. Please correct the path and redefine it with defineGeoStudioLauncher() method."
-  try:
-    output = subprocess.run(cmd, check=False, stdout=subprocess.PIPE).stdout.decode()
-  except:
-    raise ValueError(error_message)
-  if "GeoCmd" in output and "Copyright" in output:
-    print("GeoStudio version:" + output.split("\n")[0].split("version")[-1])
-    print("Successfully tested GeoStudio executable")
-  else:
-    raise ValueError(error_message)
-  return

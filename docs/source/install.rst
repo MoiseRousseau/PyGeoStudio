@@ -27,20 +27,9 @@ To do so, `open a Powershell interpretor <https://www.howtogeek.com/662611/9-way
 Make PyGeoStudio recognize GeoStudio
 ------------------------------------
 
-In order to call GeoStudio solver from Python, PyGeoStudio must know where is GeoStudio installed.
-By default, PyGeoStudio searches for executable in ``"C:\Program Files\Seequent\GeoStudio 2023.1"`` (i.e. in the default GeoStudio installation folder).
-Note the antislash in the path.
-If you install GeoStudio elsewhere, you must set that folder by opening the Python console (through Idle) or using the PowerShell interpretor (command ``python``) and typing:
+By default, PyGeoStudio searches for the ``GeoCmd.exe`` executable in ``"C:/Program Files/Seequent/GeoStudio 20XX.Y/Bin"`` (i.e. in the default GeoStudio installation folder) and takes the latest version installed in case of multiple versions available.
+If you install GeoStudio elsewhere, or what to use a specific version of GeoStudio, you must add the ``Bin`` folder in the system environment path.
+Thus:
 
-.. code-block:: python
-
-    import PyGeoStudio as pgs
-    pgs.defineGeoStudioLauncher("C:\Program Files\Seequent\GeoStudio 2023.1")
-    exit()
-
-
-Replace the string ``"C:\Program Files\Seequent\GeoStudio 2023.1"`` by your path to GeoStudio and correct the version if necessary.
-Note this is a one time action.
-Once set, the path will be stored in the library for future call.
-The change takes effect after the next import of PyGeoStudio.
-This means you can't set the path to GeoStudio in the same script that is doing calculations.
+1. Search the location of the ``GeoCmd.exe`` executable.
+2. Add this path in the system PATH variable as in this `WikiHow <https://www.wikihow.com/Change-the-PATH-Environment-Variable-on-Windows>`_
