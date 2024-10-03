@@ -33,11 +33,7 @@ PWPs = []
 
 for new_Ksat in Ksats:
   # scale hydraulic conductivity
-  # note relative permeability is defined through the function,
-  # not by the KSat attribute which is for saturated only model
-  actual_relK = Kfunction.getYData()
-  actual_Ksat = Kfunction.getYData()[0]
-  Kfunction.setYData(new_Ksat/actual_Ksat * actual_relK)
+  mat.setSaturatedHydraulicConductivity(new_Ksat)
   # run GeoStudio
   geofile.save()
   instant_drawdown = geofile.getAnalysisByName("2 - Instantaneous drawdown")

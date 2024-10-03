@@ -185,3 +185,18 @@ class Material(BasePropertiesClass):
     res += f"Stress strain model parameter: {self.data['StressStrain']}"
     return res
 
+  def setSaturatedHydraulicConductivity(self, Ksat):
+    """
+    Set the saturated hydraulic conductivity of the material.
+    If the material type is unsaturated, scale the relative permeability function.
+    
+    :param Ksat: The new saturated hydraulic conductivity
+    :type Ksat: float
+    """
+    if self["SeepModel"] == "Sat-Unsat":
+      Kfunction = self["Hydraulic"]["KFn"]
+      actual_relK = Kfunction.getYData()
+      Kfunction.setYData(new_Ksat/actual_relK[0] * actual_relK)
+    else:
+      self["SeepModel"]["Ksat"] = Ksat
+    return
